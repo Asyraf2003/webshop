@@ -1,20 +1,27 @@
 # Paperplay Webshop
 
-Prototipe detail produk React dan TypeScript untuk menguji pemilihan varian sebelum katalog diperluas.
+Toko konsep satu halaman dengan React, TypeScript, dan Vite. Alurnya mencakup katalog, kategori, pencarian, detail varian, keranjang lokal, dan checkout simulasi.
 
 ```sh
 npm ci
 npm run dev
-npm run build
+npm run build -- --base=./
 ```
 
-- `src/catalog.ts` menyimpan model, warna, dan contoh tinggi. Tiap warna memakai satu WebP transparan. Saat ukuran berubah, semua warna mengikuti skala yang sama dari data ukuran.
-- `src/main.tsx` memisahkan pratinjau dan kontrol varian. Warna berganti dengan crossfade, ukuran berubah dari titik pijak tetap, dan angka tinggi masuk dari samping.
-- Pilihan menggunakan radio HTML. Coba Tab dan tombol panah, lalu coba lagi dengan preferensi reduced motion. Panel foto memiliki ruang tetap sehingga perubahan ukuran tidak menggeser kontrol.
+- `src/catalog.ts` berisi empat model contoh. Roket memakai tiga WebP transparan. Tiga model lain memakai ilustrasi konsep SVG.
+- `src/main.tsx` memisahkan kartu katalog, pratinjau, dan detail produk. Keranjang mengelompokkan produk berdasarkan model, warna, dan ukuran.
+- `src/styles.css` mengatur komposisi rata kanan, ukuran layar, dan transisi. Warna memakai crossfade. Ukuran memakai skala dari titik pijak tetap. Animasi mengikuti preferensi reduced motion.
 
-Roket dan dimensinya adalah konsep. Jika varian ukuran produk nyata memiliki bentuk berbeda, gunakan gambar terpisah untuk varian tersebut.
+Checkout adalah simulasi. Semua harga dan tinggi adalah contoh. Jika ukuran asli punya proporsi berbeda, gunakan aset tersendiri untuk varian tersebut.
 
 ## Referensi desain
 
-- [Skiper UI — Apple Carousel](https://skiper-ui.com/v1/skiper77) menjadi acuan perpindahan gambar yang halus saat memilih warna. Implementasi proyek ini memakai CSS dan React.
-- [Its Hover](https://www.itshover.com/) menjadi acuan feedback ikon centang pada pilihan aktif. Ikon di proyek ini digambar dengan SVG sederhana.
+| Area | Acuan | Adaptasi |
+| --- | --- | --- |
+| Alur toko | [Wuffy Play and Learn](https://wuffyplayandlearn.com/) | Koleksi, detail, dan keranjang dalam satu halaman |
+| Kartu katalog | [UI.live](https://ui.live/) | Judul dan harga tetap terbaca saat kartu bergerak |
+| Galeri varian | [Skiper UI — Apple Carousel](https://skiper-ui.com/v1/skiper77) | Perpindahan gambar dengan crossfade dan posisi tetap |
+| Feedback pilihan | [Its Hover](https://www.itshover.com/) | Ikon centang ketika opsi dipilih atau produk ditambah |
+| Motion | [Prompt Motion](https://prompt-motion.com/) | Gerakan pendek yang membedakan warna, ukuran, dan panel |
+
+Implementasi dan ilustrasi SVG dibuat untuk proyek ini. Referensi dipakai sebagai acuan perilaku dan komposisi.
