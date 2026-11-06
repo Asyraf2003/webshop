@@ -1,31 +1,12 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import { createRoot } from 'react-dom/client';
-import { categories, money, products, type Category, type ColorOption, type Product, type SizeOption } from './catalog';
+import { categories, products, type Category, type ColorOption, type Product, type SizeOption } from './catalog';
+import { Icon, mediaUrl } from './icons';
+import { PaperMark, RollingNumber, RollWall, useUprightOnChange } from './motion';
 import './styles.css';
 
-type IconName = 'arrow' | 'bag' | 'search' | 'menu' | 'close' | 'plus' | 'minus' | 'check' | 'spark' | 'shopify';
 type CartLine = { productId: string; colorId: string; sizeId: string; quantity: number };
 type CartItem = CartLine & { key: string; product: Product; color: ColorOption; size: SizeOption };
-const iconPaths: Record<IconName, string> = {
-  arrow: 'M4 12h15m-6-6 6 6-6 6',
-  bag: 'M5 8h14l1 13H4L5 8Zm4 0V6a3 3 0 1 1 6 0v2',
-  search: 'M16.5 10.5a6 6 0 1 1-12 0 6 6 0 0 1 12 0Zm-1.7 4.3L20 20',
-  menu: 'M4 8h16M4 16h16',
-  close: 'm6 6 12 12M18 6 6 18',
-  plus: 'M12 5v14M5 12h14',
-  minus: 'M5 12h14',
-  check: 'm5 12 4 4 10-10',
-  spark: 'M12 2v20M2 12h20M5 5l14 14M19 5 5 19',
-  shopify: 'M5 8h14l1 13H4L5 8Zm4 0V6a3 3 0 1 1 6 0v2m-1 4c-3-2-5 1-2 2s2 4-2 3',
-};
-
-function Icon({ name }: { name: IconName }) {
-  return <svg className="icon" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPaths[name]} /></svg>;
-}
-
-function mediaUrl(path: string) {
-  return path.startsWith('data:') ? path : import.meta.env.BASE_URL + path;
-}
 
 function ProductArt({ product, color }: { product: Product; color: ColorOption }) {
   const gradient = useId();
@@ -67,90 +48,6 @@ function ProductArt({ product, color }: { product: Product; color: ColorOption }
   );
 }
 
-function Stage({ product, color, size, hero = false }: { product: Product; color: ColorOption; size?: SizeOption; hero?: boolean }) {
-  const maximum = Math.max(...product.sizes.map(option => option.height));
-  const style = { '--tint': color.tint, '--scale': size ? size.height / maximum : 1 } as CSSProperties;
-  return (
-    <figure className={`stage ${hero ? 'stage-hero' : ''}`} style={style}>
-      <div className="stage-inner" role="img" aria-label={`${product.name}, ${color.label}${size ? `, contoh tinggi ${size.height} cm` : ''}`}>
-        <div className="stage-ring ring-a" /><div className="stage-ring ring-b" />
-        <span className="stage-index">OBJEK / {product.number}</span>
-        <span className="stage-spark"><Icon name="spark" /></span>
-        <div className="stage-shadow" />
-        <div className="stage-scale">
-          {product.colors.map(option => <div className="stage-layer" key={option.id} data-active={option.id === color.id}>
-            <ProductArt product={product} color={option} />
-          </div>)}
-        </div>
-        {size && <span className="height-pill" key={size.id}>{size.height} <small>cm</small></span>}
-        {hero && <span className="stage-tag"><span /> ROKET SUSUN</span>}
-      </div>
-      {!hero && <figcaption><span>VISUAL KONSEP</span><span>{color.label} · {size?.height} cm</span></figcaption>}
-    </figure>
-  );
-}
-
-function ProductCard({ product, onOpen, order }: { product: Product; onOpen: () => void; order: number }) {
-  const color = product.colors[0];
-  return (
-    <article className="product-card" style={{ '--tint': color.tint, '--order': order } as CSSProperties}>
-      <button className="card-button" onClick={onOpen} aria-haspopup="dialog" aria-label={`Lihat ${product.name}`}>
-        <div className="card-art">
-          <span className="card-index">{product.number} /</span>
-          <span className="card-arrow"><Icon name="arrow" /></span>
-          <div className="card-object"><ProductArt product={product} color={color} /></div>
-        </div>
-        <div className="card-info">
-          <p className="eyebrow">{product.category}</p>
-          <h3>{product.name}</h3>
-          <div className="card-meta"><span className="card-swatches" aria-label={`${product.colors.length} pilihan warna`}>{product.colors.map(option => <i key={option.id} style={{ background: option.swatch }} />)}</span><span>Mulai {money.format(product.sizes[0].price)}</span></div>
-        </div>
-      </button>
-    </article>
-  );
-}
-
-function ProductDetail({ product, onAdd, onCart }: { product: Product; onAdd: (color: ColorOption, size: SizeOption) => boolean; onCart: () => void }) {
-  const [color, setColor] = useState(product.colors[0]);
-  const [size, setSize] = useState(product.sizes[1] ?? product.sizes[0]);
-  const [added, setAdded] = useState(false);
-  return (
-    <div className="detail-layout">
-      <Stage product={product} color={color} size={size} />
-      <div className="detail-copy">
-        <p className="eyebrow">{product.category} / {product.number}</p>
-        <h2 id="detail-title">{product.name}<em>.</em></h2>
-        <p className="detail-description">{product.description}</p>
-        <fieldset>
-          <legend>Warna <span>{color.label}</span></legend>
-          <div className="swatches">
-            {product.colors.map(option => <label className="swatch" key={option.id}>
-              <input type="radio" name="color" checked={option.id === color.id} onChange={() => { setColor(option); setAdded(false); }} />
-              <span className="swatch-face" style={{ '--swatch': option.swatch } as CSSProperties}><Icon name="check" /></span>
-              <span className="sr-only">{option.label}</span>
-            </label>)}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>Ukuran <span>{size.label}</span></legend>
-          <div className="size-options">
-            {product.sizes.map(option => <label className="size-option" key={option.id}>
-              <input type="radio" name="size" checked={option.id === size.id} onChange={() => { setSize(option); setAdded(false); }} />
-              <span className="size-face"><b>{option.height} cm</b><small>{option.label}</small></span>
-            </label>)}
-          </div>
-        </fieldset>
-        <div className="detail-purchase">
-          <strong>{money.format(size.price)}</strong>
-          <button className="button button-dark" onClick={() => setAdded(onAdd(color, size))}><Icon name={added ? 'check' : 'bag'} /> {added ? 'Ditambahkan' : 'Tambah ke keranjang'}</button>
-        </div>
-        {added && <button className="text-button" onClick={onCart}>Lihat keranjang <Icon name="arrow" /></button>}
-        <p className="fine-print">{product.material}. Harga dan ukuran untuk demo.</p>
-      </div>
-    </div>
-  );
-}
-
 const storageKey = 'paperplay-webshop-cart-v1';
 function lineKey(line: CartLine) { return [line.productId, line.colorId, line.sizeId].join(':'); }
 function resolveLine(line: CartLine): CartItem | undefined {
@@ -173,9 +70,111 @@ function closeBackdrop(event: MouseEvent<HTMLDialogElement>) {
   if (event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom) event.currentTarget.close();
 }
 
+function Stage({ product, color, size }: { product: Product; color: ColorOption; size: SizeOption }) {
+  const largest = Math.max(...product.sizes.map(option => option.height));
+  const pivot = useUprightOnChange(size.height);
+  const style = { '--tint': color.tint, '--scale': size.height / largest } as CSSProperties;
+  return (
+    <figure className="stage" style={style}>
+      <div className="stage-inner" role="img" aria-label={`${product.name}, ${color.label}, contoh tinggi ${size.height} cm`}>
+        <div className="stage-rule" />
+        <span className="stage-index"><RollingNumber value={Number(product.number)} pad /> / STUDI BENTUK</span>
+        <div className="stage-shadow" />
+        <div className="stage-pivot" ref={pivot}>
+          <div className="stage-scale">
+            {product.colors.map(option => <div className="stage-layer" key={option.id} data-active={option.id === color.id}>
+              <ProductArt product={product} color={option} />
+            </div>)}
+          </div>
+        </div>
+        <span className="height-pill"><RollingNumber value={size.height} suffix=" cm" /></span>
+      </div>
+      <figcaption><span>VISUAL KONSEP</span><span>{color.label}</span></figcaption>
+    </figure>
+  );
+}
+
+function ProductCard({ product, saved, onOpen, onSave }: { product: Product; saved: boolean; onOpen: () => void; onSave: () => void }) {
+  const color = product.colors[0];
+  return (
+    <article className="product-card" style={{ '--tint': color.tint } as CSSProperties}>
+      <button type="button" className="card-button" onClick={onOpen} aria-haspopup="dialog" aria-label={`Lihat ${product.name}`}>
+        <span className="card-art">
+          <span className="card-index"><RollingNumber value={Number(product.number)} pad /> /</span>
+          <span className="card-object"><ProductArt product={product} color={color} /></span>
+        </span>
+        <span className="card-info">
+          <span className="card-label">{product.category} <span> / </span> <RollingNumber value={product.colors.length} suffix=" warna" /></span>
+          <span className="card-name">{product.name}</span>
+          <span className="card-price"><RollingNumber value={product.sizes[0].price} currency /><Icon name="diagonal" /></span>
+        </span>
+      </button>
+      <button type="button" className="icon-button card-save" aria-label={`Simpan ${product.name}`} aria-pressed={saved} onClick={onSave}><Icon name="bookmark" /></button>
+    </article>
+  );
+}
+
+function ProductDetail({ product, onAdd, onCart }: { product: Product; onAdd: (color: ColorOption, size: SizeOption) => boolean; onCart: () => void }) {
+  const [color, setColor] = useState(product.colors[0]);
+  const [size, setSize] = useState(product.sizes[1] ?? product.sizes[0]);
+  const [added, setAdded] = useState(false);
+  return (
+    <div className="detail-layout">
+      <Stage product={product} color={color} size={size} />
+      <div className="detail-copy">
+        <p className="eyebrow">{product.category} / <RollingNumber value={Number(product.number)} pad /></p>
+        <h2 id="detail-title">{product.name}</h2>
+        <p className="detail-description">{product.description}</p>
+        <fieldset>
+          <legend>Warna <span>{color.label}</span></legend>
+          <div className="swatches">
+            {product.colors.map(option => <label className="swatch" key={option.id}>
+              <input type="radio" name="color" checked={option.id === color.id} onChange={() => { setColor(option); setAdded(false); }} />
+              <span className="swatch-face" style={{ '--swatch': option.swatch } as CSSProperties}><Icon name="check" /></span>
+              <span className="sr-only">{option.label}</span>
+            </label>)}
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Ukuran <span>{size.label}</span></legend>
+          <div className="size-options">
+            {product.sizes.map(option => <label className="size-option" key={option.id}>
+              <input type="radio" name="size" aria-label={`${option.label}, ${option.height} cm`} checked={option.id === size.id} onChange={() => { setSize(option); setAdded(false); }} />
+              <span className="size-face"><b><RollingNumber value={option.height} suffix=" cm" /></b><small>{option.label}</small></span>
+            </label>)}
+          </div>
+        </fieldset>
+        <div className="detail-purchase">
+          <strong className="detail-price"><RollingNumber value={size.price} currency /></strong>
+          <button type="button" className="button button-accent" onClick={() => setAdded(onAdd(color, size))}><Icon name={added ? 'check' : 'bag'} /> {added ? 'Ditambahkan' : 'Tambah ke keranjang'}</button>
+        </div>
+        {added && <button type="button" className="text-button" onClick={onCart}>Lihat keranjang <Icon name="arrow" /></button>}
+        <p className="fine-print">{product.material}. Harga dan ukuran untuk demo.</p>
+      </div>
+    </div>
+  );
+}
+
+const savedKey = 'paperplay-webshop-saved-v1';
+function loadSaved(): string[] {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(savedKey) ?? '[]');
+    return Array.isArray(stored) ? stored.filter(id => products.some(product => product.id === id)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function Total({ value }: { value: number }) {
+  return <div className="subtotal"><span>Subtotal</span><strong><RollingNumber value={value} currency /></strong></div>;
+}
+
 function App() {
   const [category, setCategory] = useState<Category | ''>('');
   const [query, setQuery] = useState('');
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [saved, setSaved] = useState(loadSaved);
   const [selected, setSelected] = useState<Product | null>(null);
   const [cart, setCart] = useState(loadCart);
   const [announcement, setAnnouncement] = useState('');
@@ -189,11 +188,14 @@ function App() {
   const items = cart.flatMap(line => { const item = resolveLine(line); return item ? [item] : []; });
   const quantity = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + item.quantity * item.size.price, 0);
+  const normalizedQuery = query.trim().toLocaleLowerCase('id-ID');
   const list = products.filter(product => (!category || product.category === category) &&
-    `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('id-ID').includes(query.trim().toLocaleLowerCase('id-ID')));
+    (!savedOnly || saved.includes(product.id)) &&
+    `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('id-ID').includes(normalizedQuery));
 
   useEffect(() => { if (selected && !detailRef.current?.open) detailRef.current?.showModal(); }, [selected]);
-  useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(cart)); } catch { /* Cart remains usable during this visit. */ } }, [cart]);
+  useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(cart)); } catch { /* Cart stays usable during this visit. */ } }, [cart]);
+  useEffect(() => { try { localStorage.setItem(savedKey, JSON.stringify(saved)); } catch { /* Saved items stay usable during this visit. */ } }, [saved]);
 
   function changeLine(line: CartLine, delta: number) {
     const key = lineKey(line);
@@ -209,59 +211,83 @@ function App() {
   function openCart() {
     detailRef.current?.close();
     menuRef.current?.close();
-    cartRef.current?.showModal();
+    if (!cartRef.current?.open) cartRef.current?.showModal();
+  }
+
+  function showSaved() {
+    setSavedOnly(current => !current);
+    setCategory('');
+    setQuery('');
+    catalogRef.current?.scrollIntoView();
   }
 
   return (
     <>
       <a className="skip-link" href="#main">Lewati ke konten</a>
-      <div className="top-note"><Icon name="spark" /> Toko konsep untuk tangan kecil dan ide besar</div>
       <header className="site-header">
         <div className="wrap header-inner">
           <div className="header-actions">
-            <button className="icon-button menu-toggle" onClick={() => menuRef.current?.showModal()} aria-label="Buka menu" aria-haspopup="dialog"><Icon name="menu" /></button>
-            <button className="icon-button search-toggle" onClick={() => { catalogRef.current?.scrollIntoView(); searchRef.current?.focus({ preventScroll: true }); }} aria-label="Cari produk"><Icon name="search" /></button>
-            <button className="cart-trigger" onClick={openCart} aria-label={`Keranjang, ${quantity} item`} aria-haspopup="dialog"><Icon name="bag" /><span>Keranjang</span><b>{quantity}</b></button>
+            <button type="button" className="icon-button menu-toggle" onClick={() => menuRef.current?.showModal()} aria-label="Buka menu" aria-haspopup="dialog"><Icon name="menu" /></button>
+            <button type="button" className="icon-button search-toggle" onClick={() => { catalogRef.current?.scrollIntoView(); searchRef.current?.focus({ preventScroll: true }); }} aria-label="Cari produk"><Icon name="search" /></button>
+            <button type="button" className="icon-button saved-toggle" onClick={showSaved} aria-label="Tampilkan produk tersimpan" aria-pressed={savedOnly}><Icon name="wishlist" /></button>
+            <button type="button" className="cart-trigger" onClick={openCart} aria-label={`Keranjang, ${quantity} item`} aria-haspopup="dialog">
+              <span className="cart-motion" key={quantity} data-filled={quantity > 0}><Icon name="cart" /></span><span className="cart-caption">Keranjang</span><b aria-hidden="true"><RollingNumber value={quantity} /></b>
+            </button>
           </div>
           <nav className="desktop-nav" aria-label="Navigasi utama"><a href="#koleksi">Koleksi</a><a href="#cara-kerja">Cara kerja</a></nav>
-          <a className="wordmark" href="#main" aria-label="Paperplay, beranda"><span className="brand-mark"><Icon name="spark" /></span>paperplay<span>.</span></a>
+          <a className="wordmark" href="#main" aria-label="Paperplay, beranda"><span>paperplay<span>.</span></span><PaperMark /></a>
         </div>
       </header>
       <main id="main">
         <section className="wrap hero" aria-labelledby="hero-title">
-          <div className="hero-art"><Stage product={products[0]} color={products[0].colors[0]} hero /></div>
+          <RollWall image={mediaUrl('editorial/rocket-studio.webp')} renderArt={(product, color) => <ProductArt product={product} color={color} />} />
           <div className="hero-copy">
-            <p className="eyebrow"><span className="dot" /> KOLEKSI 01 / RUANG MAIN</p>
-            <h1 id="hero-title">Main kecil.<br /><em>Imajinasi luas.</em></h1>
-            <p className="hero-description">Roket, pelangi, dan balok yang bisa jadi apa saja. Pilih bentuknya, coba warnanya, temukan cara mainmu.</p>
-            <a className="button button-dark" href="#koleksi">Jelajahi koleksi <Icon name="arrow" /></a>
-            <span className="hero-foot">EMPAT MODEL KONSEP <span>•</span> WARNA BISA DICOBA</span>
+            <p className="eyebrow"><span className="status-dot" /> EDISI <RollingNumber value={1} pad /> <span className="hero-slash">/</span> MAINAN SUSUN</p>
+            <h1 id="hero-title">Objek untuk<br /><em>bermain.</em></h1>
+            <p className="hero-description">Roket yang bisa dibongkar, pelangi yang bisa jadi terowongan. Kayu, warna, dan bentuk untuk disusun sesukamu.</p>
+            <a className="button button-accent" href="#koleksi">Lihat koleksi <Icon name="diagonal" /></a>
+            <div className="hero-metrics"><span><RollingNumber value={products.length} pad /> objek</span><span><RollingNumber value={products[0].colors.length} pad /> warna per objek</span></div>
           </div>
         </section>
         <section className="wrap catalog" id="koleksi" ref={catalogRef} aria-labelledby="catalog-title">
-          <div className="section-heading"><p className="section-note">Benda kecil yang bisa memulai cerita besar.</p><div><p className="eyebrow">01 / PILIH &amp; MAIN</p><h2 id="catalog-title">Rak permainan<em>.</em></h2></div></div>
-          <div className="catalog-controls">
-            <label className="search-field"><Icon name="search" /><input ref={searchRef} type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari mainan…" aria-label="Cari mainan" /></label>
-            <div className="filters" role="group" aria-label="Kategori">{(['', ...categories] as const).map(option => <button className="chip" key={option} aria-pressed={option === category} onClick={() => setCategory(option)}>{option || 'Semua'}</button>)}</div>
+          <div className="section-heading">
+            <span className="section-note"><RollingNumber value={list.length} pad /> / <RollingNumber value={products.length} pad /> OBJEK</span>
+            <div><p className="eyebrow">PAPERPLAY / KOLEKSI</p><h2 id="catalog-title">{savedOnly ? 'Tersimpan' : 'Rak permainan'}<em>.</em></h2></div>
           </div>
-          <p className="results" role="status">{list.length} produk</p>
-          {list.length ? <div className="product-grid" key={category}>{list.map((product, index) => <ProductCard key={product.id} product={product} order={index} onOpen={() => setSelected(product)} />)}</div> :
-            <div className="empty"><h3>Belum ada yang cocok.</h3><p>Coba kata lain atau lihat semua kategori.</p><button className="button button-dark" onClick={() => { setQuery(''); setCategory(''); searchRef.current?.focus(); }}>Lihat semua produk</button></div>}
+          <div className="catalog-controls">
+            <div className="catalog-tools">
+              <label className="search-field"><Icon name="search" /><input ref={searchRef} type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari objek…" aria-label="Cari mainan" /></label>
+              <div className="view-toggle" role="group" aria-label="Tampilan katalog">
+                <button type="button" className="icon-button" aria-label="Tampilan grid" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><Icon name="grid" /></button>
+                <button type="button" className="icon-button" aria-label="Tampilan daftar" aria-pressed={view === 'list'} onClick={() => setView('list')}><Icon name="list" /></button>
+              </div>
+            </div>
+            <div className="filters" role="group" aria-label="Kategori">{(['', ...categories] as const).map(option => <button type="button" className="chip" key={option} aria-pressed={option === category} onClick={() => setCategory(option)}>{option || 'Semua'}</button>)}</div>
+          </div>
+          <p className="sr-only" role="status">{list.length} produk</p>
+          {list.length ? <div className="product-grid" data-view={view}>{list.map(product =>
+            <ProductCard key={product.id} product={product} saved={saved.includes(product.id)} onOpen={() => setSelected(product)} onSave={() => setSaved(current => current.includes(product.id) ? current.filter(id => id !== product.id) : [...current, product.id])} />
+          )}</div> :
+            <div className="empty"><h3>{savedOnly && !saved.length ? 'Belum ada objek tersimpan.' : 'Belum ada yang cocok.'}</h3><button type="button" className="button button-outline" onClick={() => { setQuery(''); setCategory(''); setSavedOnly(false); searchRef.current?.focus(); }}>Lihat semua objek</button></div>}
         </section>
         <section className="wrap how" id="cara-kerja" aria-labelledby="how-title">
-          <div><p className="eyebrow">02 / COBA SENDIRI</p><h2 id="how-title">Dari pilih<br />sampai main<em>.</em></h2></div>
-          <ol><li><span>01</span><div><h3>Pilih bentuk.</h3><p>Cari mainan dari rak atau buka kategori yang kamu suka.</p></div></li><li><span>02</span><div><h3>Coba varian.</h3><p>Bandingkan warna dan lihat perubahan tinggi dalam satu pratinjau.</p></div></li><li><span>03</span><div><h3>Lihat pesanan.</h3><p>Tambah ke keranjang dan cek ringkasan di checkout demo.</p></div></li></ol>
+          <div className="how-copy"><PaperMark variant={2} /><p className="eyebrow">PAPERPLAY / CARA KERJA</p><h2 id="how-title">Coba dulu<em>.</em></h2></div>
+          <ol>{[
+            ['Pilih objek', 'Buka detail dari katalog atau simpan untuk nanti.'],
+            ['Coba varian', 'Lihat warna berganti dan objek kembali tegak setelah ukuran berubah.'],
+            ['Lihat ringkasan', 'Jumlah dan subtotal ikut berubah saat kamu menyesuaikan keranjang.'],
+          ].map(([title, body], index) => <li key={title}><span><RollingNumber value={index + 1} pad /></span><div><h3>{title}</h3><p>{body}</p></div></li>)}</ol>
         </section>
       </main>
-      <footer className="site-footer"><div className="wrap footer-inner"><a href="#main">Kembali ke atas ↑</a><p>Prototipe toko · Harga dan ukuran contoh</p><a className="wordmark" href="#main">paperplay<span>.</span></a></div></footer>
+      <footer className="site-footer"><div className="wrap footer-inner"><a href="#main">Ke atas ↑</a><p>Toko konsep · Harga dan ukuran contoh</p><a className="wordmark" href="#main"><span>paperplay<span>.</span></span><PaperMark /></a></div></footer>
       <p className="sr-only" role="status">{announcement}</p>
 
       <dialog ref={menuRef} className="dialog drawer menu-dialog" aria-labelledby="menu-title" onClick={closeBackdrop}>
-        <header className="dialog-head"><h2 id="menu-title">Menu<em>.</em></h2><button className="icon-button" aria-label="Tutup menu" onClick={() => menuRef.current?.close()}><Icon name="close" /></button></header>
-        <nav aria-label="Menu ponsel" className="menu-links"><a href="#koleksi" onClick={() => menuRef.current?.close()}>Koleksi <Icon name="arrow" /></a><a href="#cara-kerja" onClick={() => menuRef.current?.close()}>Cara kerja <Icon name="arrow" /></a><button onClick={openCart}>Keranjang <Icon name="bag" /></button></nav>
+        <header className="dialog-head"><h2 id="menu-title">Menu</h2><button type="button" className="icon-button" aria-label="Tutup menu" onClick={() => menuRef.current?.close()}><Icon name="close" /></button></header>
+        <nav aria-label="Menu ponsel" className="menu-links"><a href="#koleksi" onClick={() => menuRef.current?.close()}>Koleksi <Icon name="arrow" /></a><a href="#cara-kerja" onClick={() => menuRef.current?.close()}>Cara kerja <Icon name="arrow" /></a><button type="button" onClick={openCart}>Keranjang <Icon name="cart" /></button></nav>
       </dialog>
       <dialog ref={detailRef} className="dialog detail-dialog" aria-labelledby="detail-title" onClick={closeBackdrop} onClose={() => setSelected(null)}>
-        <button className="icon-button detail-close" aria-label="Tutup detail produk" onClick={() => detailRef.current?.close()}><Icon name="close" /></button>
+        <button type="button" className="icon-button detail-close" aria-label="Tutup detail produk" onClick={() => detailRef.current?.close()}><Icon name="close" /></button>
         {selected && <ProductDetail key={selected.id} product={selected} onCart={openCart} onAdd={(color, size) => {
           const line = { productId: selected.id, colorId: color.id, sizeId: size.id, quantity: 1 };
           if (cart.some(item => lineKey(item) === lineKey(line) && item.quantity >= 99)) {
@@ -274,24 +300,30 @@ function App() {
         }} />}
       </dialog>
       <dialog ref={cartRef} className="dialog drawer cart-dialog" aria-labelledby="cart-title" onClick={closeBackdrop}>
-        <header className="dialog-head"><div><p className="eyebrow">{quantity} ITEM</p><h2 id="cart-title">Keranjang<em>.</em></h2></div><button className="icon-button" aria-label="Tutup keranjang" onClick={() => cartRef.current?.close()}><Icon name="close" /></button></header>
-        {items.length ? <>
-          <ul className="cart-list">{items.map(item => <li key={item.key}>
-            <div className="cart-thumbnail" style={{ '--tint': item.color.tint } as CSSProperties}><ProductArt product={item.product} color={item.color} /></div>
-            <div><strong>{item.product.name}</strong><p>{item.color.label} · {item.size.height} cm</p><div className="stepper"><button className="icon-button" aria-label={`Kurangi ${item.product.name} ${item.color.label} ${item.size.height} cm`} onClick={() => {
-              if (item.quantity === 1) cartRef.current?.querySelector<HTMLButtonElement>('.dialog-head button')?.focus();
-              changeLine(item, -1);
-            }}><Icon name="minus" /></button><span aria-label="Jumlah">{item.quantity}</span><button className="icon-button" aria-label={`Tambah ${item.product.name} ${item.color.label} ${item.size.height} cm`} onClick={() => changeLine(item, 1)} disabled={item.quantity >= 99}><Icon name="plus" /></button></div></div>
-            <b>{money.format(item.size.price * item.quantity)}</b>
-          </li>)}</ul>
-          <div className="drawer-foot"><div className="subtotal"><span>Subtotal</span><strong>{money.format(subtotal)}</strong></div><button className="button button-shop" onClick={() => { setOrderComplete(false); checkoutRef.current?.showModal(); }}><Icon name="shopify" /> Demo checkout <Icon name="arrow" /></button></div>
-        </> : <div className="empty cart-empty"><Icon name="bag" /><h3>Keranjang masih kosong.</h3><p>Pilih mainan dan varian dari rak.</p><a href="#koleksi" className="button button-dark" onClick={() => cartRef.current?.close()}>Kembali ke koleksi</a></div>}
+        <div className="drawer-shell">
+          <header className="dialog-head"><div><p className="eyebrow"><RollingNumber value={quantity} pad /> ITEM</p><h2 id="cart-title">Keranjang</h2></div><button type="button" className="icon-button" aria-label="Tutup keranjang" onClick={() => cartRef.current?.close()}><Icon name="close" /></button></header>
+          {items.length ? <>
+            <ul className="cart-list">{items.map(item => <li key={item.key}>
+              <div className="cart-thumbnail" style={{ '--tint': item.color.tint } as CSSProperties}><ProductArt product={item.product} color={item.color} /></div>
+              <div className="cart-line"><strong>{item.product.name}</strong><p>{item.color.label} · <RollingNumber value={item.size.height} suffix=" cm" /></p>
+                <div className="stepper"><button type="button" className="icon-button" aria-label={`Kurangi ${item.product.name} ${item.color.label} ${item.size.height} cm`} onClick={() => {
+                  if (item.quantity === 1) cartRef.current?.querySelector<HTMLButtonElement>('.dialog-head button')?.focus();
+                  changeLine(item, -1);
+                }}><Icon name="minus" /></button><span aria-label={`Jumlah ${item.quantity}`}><RollingNumber value={item.quantity} /></span><button type="button" className="icon-button" aria-label={`Tambah ${item.product.name} ${item.color.label} ${item.size.height} cm`} onClick={() => changeLine(item, 1)} disabled={item.quantity >= 99}><Icon name="plus" /></button></div>
+              </div>
+              <b className="cart-amount"><RollingNumber value={item.size.price * item.quantity} currency /></b>
+            </li>)}</ul>
+            <div className="drawer-foot"><Total value={subtotal} /><button type="button" className="button button-accent button-wide" onClick={() => { setOrderComplete(false); checkoutRef.current?.showModal(); }}><Icon name="shopify" /> Demo checkout <Icon name="arrow" /></button></div>
+          </> : <div className="empty cart-empty"><Icon name="bag" /><h3>Keranjang masih kosong.</h3><a href="#koleksi" className="button button-outline" onClick={() => cartRef.current?.close()}>Kembali ke koleksi</a></div>}
+        </div>
       </dialog>
       <dialog ref={checkoutRef} className="dialog checkout-dialog" aria-labelledby="checkout-title" onClick={closeBackdrop}>
-        <header className="dialog-head"><div><p className="eyebrow">SIMULASI</p><h2 id="checkout-title">Checkout demo<em>.</em></h2></div><button className="icon-button" aria-label="Tutup checkout" onClick={() => checkoutRef.current?.close()}><Icon name="close" /></button></header>
+        <header className="dialog-head"><div><p className="eyebrow"><span className="status-dot" /> SIMULASI</p><h2 id="checkout-title">Checkout demo</h2></div><button type="button" className="icon-button" aria-label="Tutup checkout" onClick={() => checkoutRef.current?.close()}><Icon name="close" /></button></header>
         <div className="checkout-body">
-          {orderComplete ? <div className="empty" role="status"><Icon name="check" /><h3>Simulasi selesai.</h3><p>Tidak ada pembayaran yang diproses.</p><button className="button button-dark" onClick={() => { checkoutRef.current?.close(); cartRef.current?.close(); }}>Lanjut lihat koleksi</button></div> :
-            <><p className="fine-print">Periksa ringkasan pesanan contoh. Pembayaran belum aktif.</p><ul className="checkout-list">{items.map(item => <li key={item.key}><span>{item.quantity} × {item.product.name}<small>{item.color.label} · {item.size.height} cm</small></span><strong>{money.format(item.quantity * item.size.price)}</strong></li>)}</ul><div className="subtotal"><span>Subtotal</span><strong>{money.format(subtotal)}</strong></div><button className="button button-shop" onClick={() => setOrderComplete(true)}><Icon name="shopify" /> Selesaikan simulasi <Icon name="arrow" /></button></>}
+          {orderComplete ? <div className="empty" role="status"><Icon name="check" /><h3>Simulasi selesai.</h3><p>Tidak ada pembayaran yang diproses.</p><button type="button" className="button button-accent" onClick={() => { checkoutRef.current?.close(); cartRef.current?.close(); }}>Lanjut lihat koleksi</button></div> :
+            <><div className="checkout-note"><Icon name="credit" /><p>Ringkasan pesanan contoh. Pembayaran belum aktif.</p></div>
+              <ul className="checkout-list">{items.map(item => <li key={item.key}><span><RollingNumber value={item.quantity} /> × {item.product.name}<small>{item.color.label} · <RollingNumber value={item.size.height} suffix=" cm" /></small></span><strong><RollingNumber value={item.quantity * item.size.price} currency /></strong></li>)}</ul>
+              <Total value={subtotal} /><button type="button" className="button button-accent button-wide" onClick={() => setOrderComplete(true)}>Selesaikan simulasi <Icon name="arrow" /></button></>}
         </div>
       </dialog>
     </>
