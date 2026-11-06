@@ -25,7 +25,11 @@ export function useCart() {
     setLines(next);
     return true;
   }
-  return { lines, change };
+  function clear() {
+    current.current = [];
+    setLines(current.current);
+  }
+  return { lines, change, clear };
 }
 
 export function readSaved(value: unknown): string[] {
