@@ -38,23 +38,29 @@ export function pressFeedback(event: MouseEvent<HTMLElement>) {
     event.target instanceof HTMLInputElement) return;
   const button = event.target.closest('button:not(:disabled), a[href], label[data-press]');
   if (!button || !event.currentTarget.contains(button)) return;
-  const cart = button.querySelector('.icon-cart');
-  const element = cart ?? button;
+  const icon = button.querySelector('.icon-cart, .icon-share');
+  const element = icon ?? button;
   if (typeof element.animate !== 'function') return;
+
+  let duration = 240;
+  let peak = 'scale(.96)';
+  let rebound = 'none';
+  if (icon?.classList.contains('icon-cart')) {
+    duration = 490;
+    peak = 'translateX(4px) rotate(-9deg)';
+    rebound = 'translateX(-1px) rotate(4deg)';
+  } else if (icon) {
+    duration = 420;
+    peak = 'translateY(-5px) scale(1.12)';
+    rebound = 'translateY(1px)';
+  }
   pressed.get(element)?.cancel();
-  const frames = cart ? [
+  pressed.set(element, element.animate([
     { transform: 'none' },
-    { transform: 'translateX(4px) rotate(-9deg)', offset: .35 },
-    { transform: 'translateX(-1px) rotate(4deg)', offset: .69 },
+    { transform: peak, offset: .35 },
+    { transform: rebound, offset: .69 },
     { transform: 'none' },
-  ] : [
-    { transform: 'none' },
-    { transform: 'scale(.96)', offset: .25 },
-    { transform: 'none' },
-  ];
-  pressed.set(element, element.animate(frames, {
-    duration: cart ? 490 : 240, easing: 'cubic-bezier(.2,.7,.3,1)', composite: 'add',
-  }));
+  ], { duration, easing: 'cubic-bezier(.2,.7,.3,1)', composite: 'add' }));
 }
 
 const marks = [
