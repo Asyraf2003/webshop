@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { products, type Category, type Product } from './catalog';
-import { CartPanel, CheckoutPanel } from './cart-panel';
+import { CartPanel } from './cart-panel';
+import { CheckoutPanel } from './checkout-panel';
 import type { Point } from './commerce-ui';
 import { PageBackdrop, PromoHero } from './home-stage';
 import { categoryName, copyFor, descriptionFor, readLocale } from './locale';
@@ -33,6 +34,7 @@ function App() {
   });
   const [panel, setPanel] = useState<Panel>(selected ? 'detail' : null);
   const [origin, setOrigin] = useState<Point>();
+  const [checkoutVisit, setCheckoutVisit] = useState(0);
   const [announcement, setAnnouncement] = useState('');
   const search = useRef<HTMLInputElement>(null);
   const cart = useCart();
@@ -87,12 +89,23 @@ function App() {
     setPanel('cart');
   }
 
+  function beginCheckout() {
+    setCheckoutVisit(current => current + 1);
+    setPanel('checkout');
+  }
+
+  function browseCategory(next: Category) {
+    resetCatalogue();
+    setCategory(next);
+  }
+
   function addToCart(variant: Variant, count: number, checkout: boolean) {
     if (!cart.change(variant, count)) return false;
     setAnnouncement(copy.added + ' ' + count + ' ' + (selected?.product.name ?? ''));
     if (checkout) {
       setLinkedProduct();
-      setPanel(summary.items.some(item => item.quantity > item.stock) ? 'cart' : 'checkout');
+      if (summary.items.some(item => item.quantity > item.stock)) setPanel('cart');
+      else beginCheckout();
     }
     return true;
   }
@@ -107,20 +120,21 @@ function App() {
         onHome={resetCatalogue} onLanguage={() => setLocale(current => current === 'id' ? 'en' : 'id')}
         onSaved={toggleSaved} onCart={openCart} />
       <main id="main" tabIndex={-1}>
-        <PromoHero copy={copy} onOpen={openProduct} />
+        <PromoHero copy={copy} onOpen={openProduct} suspended={panel !== null} />
         <Catalogue copy={copy} locale={locale} list={matches} category={category} saved={saved} savedOnly={savedOnly}
           onCategory={setCategory} onOpen={openProduct} onReset={resetCatalogue}
           onSave={product => setSaved(current => current.includes(product.id) ? current.filter(id => id !== product.id) : [...current, product.id])} />
       </main>
-      <SiteFooter copy={copy} onHome={resetCatalogue} />
+      <SiteFooter copy={copy} locale={locale} onHome={resetCatalogue} onCategory={browseCategory}
+        onSaved={() => toggleSaved(true)} onCart={openCart} />
       <span className="sr-only" role="status">{announcement}</span>
       {selected && <ProductDetail key={selected.visit} product={selected.product} imageOrigin={selected.imageOrigin}
         open={panel === 'detail'} copy={copy} locale={locale}
         cart={cart.lines} onClose={closePanel} onCart={openCart} onAdd={addToCart} />}
       <CartPanel open={panel === 'cart'} origin={origin} copy={copy} locale={locale} {...summary} onChange={cart.change}
-        onClose={closePanel} onBrowse={() => { closePanel(); resetCatalogue(); }} onCheckout={() => setPanel('checkout')} />
-      <CheckoutPanel open={panel === 'checkout'} copy={copy} locale={locale} {...summary}
-        onClose={() => setPanel('cart')} onComplete={closePanel} />
+        onClose={closePanel} onBrowse={() => { closePanel(); resetCatalogue(); }} onCheckout={beginCheckout} />
+      {checkoutVisit > 0 && <CheckoutPanel key={checkoutVisit} open={panel === 'checkout'} copy={copy} locale={locale}
+        items={summary.items} valid={summary.valid} onClose={() => setPanel('cart')} onComplete={closePanel} onOrder={cart.clear} />}
     </div>
   );
 }
