@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type MouseEvent, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { usePrefersReducedMotion } from '@number-flow/react';
 import { gsap } from 'gsap';
 import type { Product, SizeOption } from './catalog';
@@ -6,11 +6,27 @@ import { Icon } from './icons';
 import type { Copy, Locale } from './locale';
 import { RollingNumber } from './motion';
 import { priceFor } from './shop';
+import { productLink } from './store-state';
 
 export type Point = { x: number; y: number };
 export function centerOf(element: Element): Point {
   const box = element.getBoundingClientRect();
   return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+}
+
+export type OpenProduct = (product: Product, imageOrigin?: DOMRect) => void;
+
+export function ProductLink({ product, className, label, image, onOpen, children }: {
+  product: Product; className: string; label?: string; image?: RefObject<HTMLElement | null>;
+  onOpen: OpenProduct; children: ReactNode;
+}) {
+  return (
+    <a href={productLink(product.id)} className={className} aria-label={label} aria-haspopup="dialog" onClick={event => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      event.preventDefault();
+      onOpen(product, image?.current?.getBoundingClientRect());
+    }}>{children}</a>
+  );
 }
 
 export function Price({ product, size, copy, mode }: { product: Product; size: SizeOption; copy: Copy; mode: 'card' | 'hero' | 'detail' }) {
@@ -67,8 +83,9 @@ export function Subtotal({ value, copy }: { value: number; copy: Copy }) {
 
 type SurfaceKind = 'menu' | 'cart' | 'detail' | 'checkout';
 
-export function Surface({ open, kind, titleId, origin, onClose, children }: {
-  open: boolean; kind: SurfaceKind; titleId: string; origin?: Point; onClose: () => void; children: ReactNode;
+export function Surface({ open, kind, titleId, origin, enter, onClose, children }: {
+  open: boolean; kind: SurfaceKind; titleId: string; origin?: Point;
+  enter?: (dialog: HTMLDialogElement) => boolean; onClose: () => void; children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const reducedMotion = usePrefersReducedMotion();
@@ -84,13 +101,8 @@ export function Surface({ open, kind, titleId, origin, onClose, children }: {
     if (reducedMotion) return;
 
     const motion = gsap.context(() => {
-      if (kind === 'menu') {
-        gsap.timeline()
-          .fromTo(dialog, { clipPath: 'inset(0% 0% 100% 0%)' }, {
-            clipPath: 'inset(0% 0% 0% 0%)', duration: .57, ease: 'power4.inOut', clearProps: 'clipPath',
-          })
-          .from('.menu-label', { yPercent: 104, duration: .55, stagger: .074, ease: 'power4.out', clearProps: 'transform' }, .22);
-      } else if (kind === 'cart' && matchMedia('(min-width: 741px)').matches) {
+      if (enter?.(dialog)) return;
+      if (kind === 'cart' && matchMedia('(min-width: 741px)').matches) {
         const bounds = dialog.getBoundingClientRect();
         const x = Math.min(98, Math.max(2, ((origin?.x ?? bounds.right - 24) - bounds.left) / bounds.width * 100));
         const edge = Math.min(100, x + 3);
@@ -107,7 +119,7 @@ export function Surface({ open, kind, titleId, origin, onClose, children }: {
     }, dialog);
 
     return () => motion.revert();
-  }, [open, kind, origin, reducedMotion]);
+  }, [open, kind, origin, enter, reducedMotion]);
 
   function backdrop(event: MouseEvent<HTMLDialogElement>) {
     if (event.target !== event.currentTarget) return;
