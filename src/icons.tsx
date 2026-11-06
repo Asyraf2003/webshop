@@ -36,6 +36,23 @@ const outlines = {
   bookmark: 'M6 5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16l-6-4-6 4z',
 };
 
+export function LanguageFlag({ locale }: { locale: 'id' | 'en' }) {
+  return (
+    <svg className="icon flag-icon" viewBox="0 0 24 24" aria-hidden="true">
+      {locale === 'id' ? <>
+        <path fill="#ef3038" stroke="none" d="M0 0h24v12H0z" />
+        <path fill="#fff" stroke="none" d="M0 12h24v12H0z" />
+      </> : <>
+        <path fill="#233e76" stroke="none" d="M0 0h24v24H0z" />
+        <path stroke="#fff" strokeWidth="5" d="m0 2 24 20m0-20L0 22" />
+        <path stroke="#cf2942" strokeWidth="1.7" d="m0 1 24 20m0-20L0 21" />
+        <path stroke="#fff" strokeWidth="7" d="M12 0v24M0 12h24" />
+        <path stroke="#cf2942" strokeWidth="3.8" d="M12 0v24M0 12h24" />
+      </>}
+    </svg>
+  );
+}
+
 export function CartIcon() {
   return (
     <svg className="icon icon-cart" viewBox="0 0 24 24" aria-hidden="true">
