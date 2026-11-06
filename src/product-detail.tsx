@@ -1,4 +1,5 @@
-import { useState, type CSSProperties } from 'react';
+import { useCallback, useRef, useState, type CSSProperties } from 'react';
+import { gsap } from 'gsap';
 import type { ColorOption, MediaAsset, Product, SizeOption } from './catalog';
 import { centerOf, CloseButton, Price, Rating, Stepper, Surface, type Point } from './commerce-ui';
 import { CartIcon, Icon, mediaUrl } from './icons';
@@ -54,8 +55,8 @@ function ProductMedia({ product, color, size, active, onMedia, copy, locale }: {
   );
 }
 
-export function ProductDetail({ product, open, copy, locale, cart, onClose, onCart, onAdd }: {
-  product: Product; open: boolean; copy: Copy; locale: Locale; cart: CartLine[];
+export function ProductDetail({ product, open, copy, locale, cart, imageOrigin, onClose, onCart, onAdd }: {
+  product: Product; open: boolean; copy: Copy; locale: Locale; cart: CartLine[]; imageOrigin?: DOMRect;
   onClose: () => void; onCart: (origin: Point) => void; onAdd: (variant: Variant, count: number, checkout: boolean) => boolean;
 }) {
   const [color, setColor] = useState(product.colors[0]);
@@ -69,6 +70,30 @@ export function ProductDetail({ product, open, copy, locale, cart, onClose, onCa
   const available = Math.max(0, stock - existing);
   const quantity = Math.max(1, Math.min(count, available));
 
+  const flight = useRef<HTMLDivElement>(null);
+  const enter = useCallback((dialog: HTMLDialogElement) => {
+    const layer = flight.current;
+    const target = dialog.querySelector<HTMLElement>('.detail-preview .stage-scale');
+    if (!layer || !target || !imageOrigin?.width || !imageOrigin.height) return false;
+    const destination = target.getBoundingClientRect();
+    if (!destination.width || !destination.height) return false;
+
+    gsap.set(layer, {
+      left: imageOrigin.left, top: imageOrigin.top, width: imageOrigin.width, height: imageOrigin.height,
+      autoAlpha: 1, transformOrigin: '0 0',
+    });
+    gsap.set(target, { opacity: 0 });
+    gsap.timeline()
+      .to(layer, {
+        x: destination.left - imageOrigin.left, y: destination.top - imageOrigin.top,
+        scaleX: destination.width / imageOrigin.width, scaleY: destination.height / imageOrigin.height,
+        duration: .54, ease: 'power3.inOut',
+      })
+      .to(target, { opacity: 1, duration: .16, ease: 'power2.out', clearProps: 'opacity' }, .43)
+      .to(layer, { autoAlpha: 0, duration: .16, ease: 'power2.out' }, .43);
+    return true;
+  }, [imageOrigin]);
+
   function chooseVariant(nextColor: ColorOption, nextSize: SizeOption) {
     setColor(nextColor);
     setSize(nextSize);
@@ -81,7 +106,10 @@ export function ProductDetail({ product, open, copy, locale, cart, onClose, onCa
   }
 
   return (
-    <Surface open={open} kind="detail" titleId="detail-title" onClose={onClose}>
+    <Surface open={open} kind="detail" titleId="detail-title" enter={imageOrigin ? enter : undefined} onClose={onClose}>
+      {open && imageOrigin && <div ref={flight} className="shared-product-image" aria-hidden="true">
+        <ProductArt product={product} color={product.colors[0]} />
+      </div>}
       <CloseButton label={copy.close + ' ' + copy.product} onClose={onClose} />
       <div className="detail-layout">
         <ProductMedia product={product} color={color} size={size} active={media} onMedia={setMedia} copy={copy} locale={locale} />
