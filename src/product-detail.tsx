@@ -121,7 +121,7 @@ export function ProductDetail({ product, open, copy, locale, cart, imageOrigin, 
           <Rating product={product} copy={copy} locale={locale} detailed />
           <Price product={product} size={size} copy={copy} mode="detail" />
           <div className="detail-options">
-            <fieldset className="option-row">
+            {product.colors.length > 1 && <fieldset className="option-row">
               <legend className="sr-only">{copy.color}</legend>
               <span className="option-label" aria-hidden="true">{copy.color}</span>
               <div className="variant-options">
@@ -133,8 +133,8 @@ export function ProductDetail({ product, open, copy, locale, cart, imageOrigin, 
                   </label>
                 ))}
               </div>
-            </fieldset>
-            <fieldset className="option-row">
+            </fieldset>}
+            {product.sizes.length > 1 && <fieldset className="option-row">
               <legend className="sr-only">{copy.size}</legend>
               <span className="option-label" aria-hidden="true">{copy.size}</span>
               <div className="variant-options">
@@ -146,7 +146,7 @@ export function ProductDetail({ product, open, copy, locale, cart, imageOrigin, 
                   </label>
                 ))}
               </div>
-            </fieldset>
+            </fieldset>}
             <div className="option-row">
               <span className="option-label" aria-hidden="true">{copy.quantity}</span>
               <div className="quantity-row">
@@ -183,7 +183,7 @@ export function ProductDetail({ product, open, copy, locale, cart, imageOrigin, 
       </section>
       <section className="product-section" aria-labelledby="description-title">
         <h3 id="description-title">{copy.description}</h3>
-        <p>{descriptionFor(product, locale)}</p><p className="fine-print">{copy.concept}</p>
+        <p>{descriptionFor(product, locale)}</p>
       </section>
     </Surface>
   );
