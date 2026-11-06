@@ -1,5 +1,5 @@
 type FigmaName = 'bag' | 'wishlist' | 'credit';
-type IconName = FigmaName | 'arrow' | 'diagonal' | 'search' | 'menu' | 'close' | 'plus' | 'minus' | 'check' | 'shopify' | 'replay' | 'grid' | 'list' | 'bookmark' | 'cart' | 'ticket' | 'star' | 'share' | 'language' | 'play';
+type IconName = FigmaName | 'arrow' | 'diagonal' | 'search' | 'menu' | 'close' | 'plus' | 'minus' | 'check' | 'shopify' | 'replay' | 'grid' | 'list' | 'bookmark' | 'cart' | 'ticket' | 'star' | 'share' | 'language' | 'play' | 'pause' | 'account' | 'bank' | 'wallet' | 'package';
 
 const figmaSources: Record<FigmaName, string> = {
   bag: 'figma/bag.svg',
@@ -28,6 +28,11 @@ const outlines = {
   share: 'M12 15V3m-4 4 4-4 4 4M6 11H4v10h16V11h-2',
   language: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM3 12h18M12 3a14 14 0 0 1 0 18m0-18a14 14 0 0 0 0 18',
   play: 'm9 5 12 7-12 7V5Z',
+  pause: 'M9 5v14m6-14v14',
+  account: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM4.5 21v-1.5a5 5 0 0 1 5-5h5a5 5 0 0 1 5 5V21',
+  bank: 'm3 8 9-5 9 5v2H3V8Zm2 12h14M7 10v7m5-7v7m5-7v7',
+  wallet: 'M3 6h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Zm0 0 13-3 1 3m4 5h-6v4h6',
+  package: 'm3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4m-9 4v10M7.5 5l9 4',
   bookmark: 'M6 5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16l-6-4-6 4z',
 };
 
