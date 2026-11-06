@@ -1,6 +1,6 @@
 # Paperplay Webshop
 
-Toko konsep React, TypeScript, dan Vite dengan katalog, promo voucher demo, detail produk, dan keranjang lokal.
+Prototipe toko mainan statis dengan React, TypeScript, dan Vite. Beranda menampilkan pilihan promo, katalog, dan detail produk yang dapat dibagikan.
 
 ```sh
 npm ci
@@ -12,17 +12,19 @@ npm run build -- --base=./
 
 | Bagian | File | Isi |
 | --- | --- | --- |
-| Data dan aturan toko | `src/catalog.ts`, `src/shop.ts` | Produk, media, stok per varian, harga voucher, dan perhitungan keranjang |
-| Adapter browser | `src/store-state.ts` | Keranjang, daftar tersimpan, bahasa, dan tautan produk |
-| Antarmuka toko | `src/storefront.tsx`, `src/product-detail.tsx`, `src/cart-panel.tsx` | Header, menu, promo, katalog, detail, keranjang, dan checkout demo |
-| Komponen bersama | `src/commerce-ui.tsx`, `src/icons.tsx`, `src/product-art.tsx` | Harga, rating, kuantitas, panel dialog, ikon keranjang, dan media |
-| Gerak dan bahasa | `src/motion.tsx`, `src/paperplay.css`, `src/locale.ts` | NumberFlow, WAAPI, transisi, dan teks ID/EN |
+| Model dan aturan toko | `src/catalog.ts`, `src/shop.ts` | Produk, media, stok per varian, harga voucher, dan perhitungan keranjang |
+| Adapter browser | `src/store-state.ts` | Keranjang lokal, daftar tersimpan, bahasa, dan tautan produk |
+| Alur aplikasi | `src/main.tsx` | Navigasi, filter, pemilihan produk, dan alur checkout demo |
+| Beranda dan navigasi | `src/home-stage.tsx`, `src/site-chrome.tsx`, `src/home.css` | Latar SVG halaman, hero promo, dan menu yang membuka dari tombol |
+| View toko | `src/storefront.tsx`, `src/product-detail.tsx`, `src/cart-panel.tsx` | Katalog, media dan spesifikasi produk, keranjang, dan checkout |
+| Komponen bersama | `src/commerce-ui.tsx`, `src/icons.tsx`, `src/product-art.tsx` | Harga, rating, kuantitas, panel dialog, ikon, dan gambar produk |
+| Gerak dan bahasa | `src/motion.tsx`, `src/paperplay.css`, `src/locale.ts` | NumberFlow, WAAPI, gaya dasar, dan teks ID/EN |
 
-GSAP mengatur roll promo, perpindahan kartu, menu layar penuh, dan lipatan panel keranjang. Gerakan mengikuti preferensi reduced motion. Keranjang, bookmark, dan pilihan bahasa disimpan di browser. Harga, voucher, rating, jumlah terjual, dan stok adalah data demo. Checkout adalah simulasi.
+GSAP mengatur reveal hero, perpindahan kartu, perpindahan gambar dari promo ke detail, dan panel keranjang. Gerakan mengikuti preferensi reduced motion. Harga, voucher, rating, stok, dan checkout memakai data demo.
 
 ## Referensi desain
 
-- Screenshot marketplace dari pengguna untuk hierarki harga, voucher, rating, spesifikasi, dan deskripsi.
-- [Lusion](https://lusion.co/) untuk arah menu layar penuh, dengan transisi yang dibuat untuk Paperplay.
-- [Skiper UI — Animated Number 37](https://skiper-ui.com/v1/skiper37) dan [NumberFlow](https://number-flow.barvian.me/) untuk digit harga, ukuran, dan jumlah.
-- Screenshot roll dan tiga bentuk SVG dari pengguna untuk galeri yang kembali lurus setelah gerak selesai.
+- [Lusion](https://lusion.co/) untuk panel menu di bawah tombol dan latar visual yang berlanjut antarbagiannya. Paperplay memakai tiga bentuk SVG dari pengguna sebagai latar halaman.
+- [Oryzo](https://oryzo.ai/) untuk penempatan satu produk sebagai pusat hero.
+- [Duten](https://www.duten.com/en/) untuk respons ringan terhadap gerakan pointer.
+- [Codrops Hover Motion & Transition Image Grid](https://tympanus.net/Development/IntroGridMotionTransition/) untuk kontinuitas visual dari foto promo ke detail.
