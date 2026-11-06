@@ -1,27 +1,36 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { usePrefersReducedMotion } from '@number-flow/react';
 import { gsap } from 'gsap';
 import { products } from './catalog';
 import { Price, ProductLink, type OpenProduct } from './commerce-ui';
 import { Icon } from './icons';
 import type { Copy } from './locale';
-import { PaperMark, RollingNumber } from './motion';
+import { RollingNumber } from './motion';
 import { ProductArt } from './product-art';
 
 export function PageBackdrop() {
   return (
     <div className="page-backdrop" aria-hidden="true">
-      <div className="page-shape page-shape-hero"><PaperMark /></div>
-      <div className="page-shape page-shape-sweep"><PaperMark variant={1} /></div>
-      <div className="page-shape page-shape-base"><PaperMark variant={2} /></div>
+      <svg className="paper-orbits" viewBox="0 0 840 640" fill="none" preserveAspectRatio="xMidYMid slice">
+        <ellipse cx="521" cy="302" rx="281" ry="179" transform="rotate(-26 521 302)" />
+        <ellipse cx="521" cy="302" rx="301" ry="198" transform="rotate(-26 521 302)" />
+        <ellipse cx="521" cy="302" rx="321" ry="217" transform="rotate(-26 521 302)" />
+        <ellipse cx="521" cy="302" rx="341" ry="236" transform="rotate(-26 521 302)" />
+        <path d="M171 102h24m-12-12v24m543 351h24m-12-12v24M387 495h16m-8-8v16" />
+      </svg>
+      <div className="paper-rules" />
     </div>
   );
 }
 
-const offers = products.filter(product => product.promo);
+const offers = products.filter(product => product.promo).slice(0, 3);
+const offerInterval = 3000;
 
-export function PromoHero({ copy, onOpen }: { copy: Copy; onOpen: OpenProduct }) {
+export function PromoHero({ copy, onOpen, suspended = false }: { copy: Copy; onOpen: OpenProduct; suspended?: boolean }) {
   const [view, setView] = useState({ index: 0, previous: -1, direction: 0 });
+  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [visible, setVisible] = useState(() => !document.hidden);
   const root = useRef<HTMLElement>(null);
   const visual = useRef<HTMLElement>(null);
   const drift = useRef<HTMLDivElement>(null);
@@ -29,6 +38,20 @@ export function PromoHero({ copy, onOpen }: { copy: Copy; onOpen: OpenProduct })
   const reducedMotion = usePrefersReducedMotion();
   const offer = offers[view.index];
   const outgoing = offers[view.previous];
+
+  useEffect(() => {
+    function visibility() { setVisible(!document.hidden); }
+    document.addEventListener('visibilitychange', visibility);
+    return () => document.removeEventListener('visibilitychange', visibility);
+  }, []);
+
+  useEffect(() => {
+    if (offers.length < 2 || reducedMotion || paused || hovered || !visible || suspended) return;
+    const timer = window.setTimeout(() => {
+      setView(current => ({ index: (current.index + 1) % offers.length, previous: current.index, direction: 1 }));
+    }, offerInterval);
+    return () => window.clearTimeout(timer);
+  }, [view.index, reducedMotion, paused, hovered, visible, suspended]);
 
   useLayoutEffect(() => {
     if (reducedMotion || !root.current) return;
@@ -53,7 +76,7 @@ export function PromoHero({ copy, onOpen }: { copy: Copy; onOpen: OpenProduct })
           clearProps: 'transform,filter,opacity',
         }, opening ? .03 : .1)
         .from('.hero-reveal', {
-          y: 12, opacity: 0, stagger: .045, duration: .46, ease: 'power3.out', clearProps: 'transform,opacity',
+          y: 9, opacity: .58, stagger: .045, duration: .42, ease: 'power3.out', clearProps: 'transform,opacity',
         }, .14);
     }, root);
     return () => context.revert();
@@ -92,7 +115,16 @@ export function PromoHero({ copy, onOpen }: { copy: Copy; onOpen: OpenProduct })
   if (!offer) return null;
   const color = offer.colors[0];
   return (
-    <section className="hero-stage wrap" ref={root} aria-label={copy.promotion} style={{ '--hero-tone': color.dark } as CSSProperties}>
+    <section id="promo" className="hero-stage wrap" ref={root} aria-label={copy.promotion}
+      onPointerEnter={event => { if (event.pointerType === 'mouse') setHovered(true); }}
+      onPointerLeave={() => setHovered(false)}
+      onFocusCapture={event => {
+        if (event.target.matches(':focus-visible')) setPaused(true);
+      }}
+      style={{ '--hero-tone': color.dark } as CSSProperties}>
+      {offers.length > 1 && !reducedMotion && <button type="button" className="plain-icon hero-rotation"
+        aria-label={paused ? copy.playOffers : copy.pauseOffers} title={paused ? copy.playOffers : copy.pauseOffers}
+        onClick={() => setPaused(current => !current)}><Icon name={paused ? 'play' : 'pause'} /></button>}
       <div className="hero-copy">
         <p className="hero-tag hero-reveal"><Icon name="ticket" />{copy.demoPromo}</p>
         <div className="hero-title-frame"><h2 className="hero-title hero-reveal">{offer.name}</h2></div>
