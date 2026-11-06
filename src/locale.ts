@@ -1,12 +1,12 @@
 import type { Category, ColorOption, Product } from './catalog';
 
 export type Locale = 'id' | 'en';
-export const readLocale = (value: unknown): Locale => value === 'en' ? 'en' : 'id';
+export const readLocale = (value: unknown): Locale => value === 'id' ? 'id' : 'en';
 
 const id = {
   home: 'Beranda', skip: 'Lewati ke konten', search: 'Cari mainan', menu: 'Menu', openMenu: 'Buka menu',
   close: 'Tutup', saved: 'Tersimpan', save: 'Simpan', unsave: 'Hapus dari tersimpan', cart: 'Keranjang',
-  switchLanguage: 'Ganti ke English', collection: 'Koleksi mainan', gallery: 'Galeri Paperplay',
+  switchLanguage: 'Ganti ke bahasa Inggris', collection: 'Koleksi mainan', gallery: 'Galeri Paperplay',
   all: 'Semua', products: 'produk', categories: 'Kategori', noResults: 'Belum ada mainan yang cocok.',
   noSaved: 'Belum ada mainan tersimpan.', showAll: 'Lihat semua mainan', viewProduct: 'Lihat produk',
   promotion: 'Promo Paperplay', demoPromo: 'PILIHAN PROMO', previous: 'Sebelumnya', next: 'Berikutnya',
