@@ -1,6 +1,6 @@
 # Paperplay Webshop
 
-Toko konsep satu halaman dengan React, TypeScript, dan Vite. Cari mainan, lihat harga dan varian, simpan favorit, dan coba checkout simulasi. Galeri roll ada di bawah katalog.
+Toko konsep React, TypeScript, dan Vite dengan katalog, promo voucher demo, detail produk, dan keranjang lokal.
 
 ```sh
 npm ci
@@ -8,24 +8,21 @@ npm run dev
 npm run build -- --base=./
 ```
 
-## Komponen
+## Struktur
 
-- `src/motion.tsx` berisi `RollWall`, `RollingNumber`, `PaperMark`, dan gerakan ukuran produk. Setiap animasi roll berakhir dengan transform kosong. Opsi reduced motion dihormati.
-- `src/icons.tsx` menggabungkan ikon antarmuka animatif dan aset e-commerce dari Figma. Aset Figma disimpan sebagai file SVG asli di `public/figma`.
-- `src/catalog.ts` berisi empat model contoh. Roket memakai satu WebP transparan per warna. Model lain memakai ilustrasi SVG konsep.
-- `src/main.tsx` berisi alur katalog, filter, detail, daftar tersimpan, keranjang dan checkout. Keranjang dan favorit disimpan di browser.
-- `src/styles.css` mengatur katalog terang, galeri gelap, dan tata letak belanja untuk desktop dan mobile.
+| Bagian | File | Isi |
+| --- | --- | --- |
+| Data dan aturan toko | `src/catalog.ts`, `src/shop.ts` | Produk, media, stok per varian, harga voucher, dan perhitungan keranjang |
+| Adapter browser | `src/store-state.ts` | Keranjang, daftar tersimpan, bahasa, dan tautan produk |
+| Antarmuka toko | `src/storefront.tsx`, `src/product-detail.tsx`, `src/cart-panel.tsx` | Header, menu, promo, katalog, detail, keranjang, dan checkout demo |
+| Komponen bersama | `src/commerce-ui.tsx`, `src/icons.tsx`, `src/product-art.tsx` | Harga, rating, kuantitas, panel dialog, ikon keranjang, dan media |
+| Gerak dan bahasa | `src/motion.tsx`, `src/paperplay.css`, `src/locale.ts` | NumberFlow, WAAPI, transisi, dan teks ID/EN |
 
-Harga dan tinggi adalah contoh. Checkout adalah simulasi tanpa pembayaran.
+GSAP mengatur roll promo, perpindahan kartu, menu layar penuh, dan lipatan panel keranjang. Gerakan mengikuti preferensi reduced motion. Keranjang, bookmark, dan pilihan bahasa disimpan di browser. Harga, voucher, rating, jumlah terjual, dan stok adalah data demo. Checkout adalah simulasi.
 
 ## Referensi desain
 
-| Bagian | Acuan | Adaptasi |
-| --- | --- | --- |
-| Galeri | Screenshot roll dan tiga SVG yang dikirim pengguna | Panel editorial bergeser dan miring, lalu kembali rata setelah setiap aksi |
-| Angka | [Skiper UI — Animated Number 37](https://skiper-ui.com/v1/skiper37) · [NumberFlow](https://number-flow.barvian.me/) | Digit bergerak saat harga, jumlah, ukuran, dan subtotal berubah |
-| Katalog, detail, dan keranjang | Screenshot marketplace dari pengguna | Foto dan harga dominan, judul reguler, deskripsi hanya di detail, dan kolom keranjang sejajar |
-| Ikon | [Its Hover](https://www.itshover.com/icons) · [Figma E-commerce Icon Set](https://www.figma.com/design/4J1nBYWsXrIVOk2bEmbkYR/Untitled?node-id=1001-13) | Roda keranjang, garis daftar, dan bookmark punya umpan balik. Bag, Wishlist, dan Credit Card memakai SVG dari Figma |
-| Checkout | Referensi visual pembelian Premium dari pengguna | Ringkasan mengutamakan subtotal, detail varian, dan aksi berikutnya |
-
-Foto studio roket adalah visual konsep yang dibuat dari referensi aset roket Paperplay.
+- Screenshot marketplace dari pengguna untuk hierarki harga, voucher, rating, spesifikasi, dan deskripsi.
+- [Lusion](https://lusion.co/) untuk arah menu layar penuh, dengan transisi yang dibuat untuk Paperplay.
+- [Skiper UI — Animated Number 37](https://skiper-ui.com/v1/skiper37) dan [NumberFlow](https://number-flow.barvian.me/) untuk digit harga, ukuran, dan jumlah.
+- Screenshot roll dan tiga bentuk SVG dari pengguna untuk galeri yang kembali lurus setelah gerak selesai.
