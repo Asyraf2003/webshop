@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties } from 'react';
+import { useRef, type CSSProperties } from 'react';
 import { CloseButton, Stepper, Subtotal, Surface, type Point } from './commerce-ui';
 import { CartIcon, Icon } from './icons';
 import { colorName, type Copy, type Locale } from './locale';
@@ -58,37 +58,6 @@ export function CartPanel({ open, origin, copy, locale, items, quantity, subtota
         </> : <div className="empty cart-empty"><CartIcon /><p>{copy.emptyCart}</p>
           <a href="#koleksi" className="button button-outline" onClick={onBrowse}>{copy.backToCollection}</a>
         </div>}
-      </div>
-    </Surface>
-  );
-}
-
-export function CheckoutPanel({ open, copy, locale, items, subtotal, valid, onClose, onComplete }: {
-  open: boolean; copy: Copy; locale: Locale; items: CartItem[]; subtotal: number; valid: boolean; onClose: () => void; onComplete: () => void;
-}) {
-  const [complete, setComplete] = useState(false);
-  function close() { setComplete(false); onClose(); }
-  function finish() { setComplete(false); onComplete(); }
-
-  return (
-    <Surface open={open} kind="checkout" titleId="checkout-title" onClose={close}>
-      <header className="surface-head"><h2 id="checkout-title">{copy.checkout}</h2>
-        <CloseButton label={copy.close + ' ' + copy.checkout} onClose={close} />
-      </header>
-      <div className="checkout-body">
-        {complete ? <div className="empty" role="status"><Icon name="check" /><p>{copy.complete}</p>
-          <button type="button" className="button button-solid" onClick={finish}>{copy.keepShopping}</button>
-        </div> : <>
-          <p className="checkout-note">{copy.checkoutNote}</p>
-          <ul className="checkout-list">{items.map(item => (
-            <li key={variantKey(item)}>
-              <div><RollingNumber value={item.quantity} /> × {item.product.name}<small><VariantText item={item} locale={locale} /></small></div>
-              <strong><RollingNumber value={item.quantity * item.unitPrice} currency /></strong>
-            </li>
-          ))}</ul>
-          <Subtotal value={subtotal} copy={copy} />
-          <button type="button" className="button button-solid checkout-confirm" disabled={!valid} onClick={() => setComplete(true)}>{copy.simulate}<Icon name="arrow" /></button>
-        </>}
       </div>
     </Surface>
   );
