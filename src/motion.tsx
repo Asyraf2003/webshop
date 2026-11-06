@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import NumberFlow, { usePrefersReducedMotion } from '@number-flow/react';
 import { products, type ColorOption, type Product } from './catalog';
 import { Icon } from './icons';
@@ -9,18 +9,20 @@ const integerFormat = { maximumFractionDigits: 0 } as const;
 const twoDigitFormat = { ...integerFormat, minimumIntegerDigits: 2 } as const;
 const rupiahFormat = { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 } as const;
 
-export function RollingNumber({ value, currency = false, pad = false, suffix }: {
+export function RollingNumber({ value, currency = false, pad = false, fraction = 0, suffix, locale = 'id-ID' }: {
   value: number;
   currency?: boolean;
   pad?: boolean;
+  fraction?: number;
   suffix?: string;
+  locale?: string;
 }) {
   return (
     <NumberFlow
       className="flow-number"
       value={value}
-      locales="id-ID"
-      format={currency ? rupiahFormat : pad ? twoDigitFormat : integerFormat}
+      locales={currency ? "id-ID" : locale}
+      format={currency ? rupiahFormat : pad ? twoDigitFormat : fraction ? { minimumFractionDigits: fraction, maximumFractionDigits: fraction } : integerFormat}
       suffix={suffix}
       transformTiming={digitTiming}
       spinTiming={digitTiming}
@@ -29,6 +31,32 @@ export function RollingNumber({ value, currency = false, pad = false, suffix }: 
       isolate
     />
   );
+}
+
+const pressed = new WeakMap<Element, Animation>();
+
+export function pressFeedback(event: MouseEvent<HTMLElement>) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !(event.target instanceof Element) ||
+    event.target instanceof HTMLInputElement) return;
+  const button = event.target.closest('button:not(:disabled), a[href], label[data-press]');
+  if (!button || !event.currentTarget.contains(button)) return;
+  const cart = button.querySelector('.icon-cart');
+  const element = cart ?? button;
+  if (typeof element.animate !== 'function') return;
+  pressed.get(element)?.cancel();
+  const frames = cart ? [
+    { transform: 'none' },
+    { transform: 'translateX(4px) rotate(-9deg)', offset: .35 },
+    { transform: 'translateX(-1px) rotate(4deg)', offset: .69 },
+    { transform: 'none' },
+  ] : [
+    { transform: 'none' },
+    { transform: 'scale(.96)', offset: .25 },
+    { transform: 'none' },
+  ];
+  pressed.set(element, element.animate(frames, {
+    duration: cart ? 490 : 240, easing: 'cubic-bezier(.2,.7,.3,1)', composite: 'add',
+  }));
 }
 
 const marks = [
@@ -101,7 +129,7 @@ function RollTile({ tile, image, renderArt }: {
   renderArt: (product: Product, color: ColorOption) => ReactNode;
 }) {
   if (tile.kind === 'photo') {
-    return <div className="roll-tile roll-photo"><img src={image} width="1200" height="800" alt="" decoding="async" style={{ objectPosition: tile.position }} /></div>;
+    return <div className="roll-tile roll-photo"><img src={image} width="1200" height="800" alt="" loading="lazy" decoding="async" style={{ objectPosition: tile.position }} /></div>;
   }
   if (tile.kind === 'object') {
     const product = products[tile.product];
@@ -114,8 +142,10 @@ function RollTile({ tile, image, renderArt }: {
   return <div className={`roll-tile roll-type tone-${tile.tone}`}><b>{tile.line}</b><span>{tile.sub}</span></div>;
 }
 
-export function RollWall({ image, renderArt }: { image: string; renderArt: (product: Product, color: ColorOption) => ReactNode }) {
+export function RollWall({ image, renderArt, locale = 'id' }: { image: string; locale?: 'id' | 'en'; renderArt: (product: Product, color: ColorOption) => ReactNode }) {
   const [view, setView] = useState({ index: 0, revision: 0, direction: 1 });
+  const english = locale === 'en';
+  const caption = (english ? ['Shape study', 'Color study', 'Stack study'] : editions)[view.index];
   const track = useRef<HTMLDivElement>(null);
   const animations = useRef<Animation[]>([]);
   const reducedMotion = usePrefersReducedMotion();
@@ -152,8 +182,8 @@ export function RollWall({ image, renderArt }: { image: string; renderArt: (prod
   useEffect(() => () => animations.current.forEach(animation => animation.cancel()), []);
 
   return (
-    <section className="roll-wall" aria-label="Galeri Paperplay">
-      <div className="roll-header"><span><i /> STUDIO / PAPERPLAY</span><span>ARSIP BENTUK</span></div>
+    <section className="roll-wall" aria-label={english ? "Paperplay gallery" : "Galeri Paperplay"}>
+      <div className="roll-header"><span><i /> STUDIO / PAPERPLAY</span><span>{english ? "SHAPE ARCHIVE" : "ARSIP BENTUK"}</span></div>
       <div className="roll-window" aria-hidden="true">
         <div className="roll-track" ref={track}>
           {rows.map(row => <div className="roll-row" key={row}>
@@ -168,12 +198,12 @@ export function RollWall({ image, renderArt }: { image: string; renderArt: (prod
       <div className="roll-footer">
         <div className="roll-caption">
           <span className="roll-count"><RollingNumber value={view.index + 1} pad /> <span>/</span> <RollingNumber value={editions.length} pad /></span>
-          <output>{editions[view.index]}</output>
+          <output>{caption}</output>
         </div>
         <div className="roll-buttons">
-          <button type="button" className="icon-button roll-arrow prev" aria-label="Galeri sebelumnya" onClick={() => move(-1)}><Icon name="arrow" /></button>
-          <button type="button" className="icon-button roll-replay" aria-label="Ulangi roll" onClick={() => move(0)}><Icon name="replay" /></button>
-          <button type="button" className="icon-button roll-arrow" aria-label="Galeri berikutnya" onClick={() => move(1)}><Icon name="arrow" /></button>
+          <button type="button" className="icon-button roll-arrow prev" aria-label={english ? "Previous gallery" : "Galeri sebelumnya"} onClick={() => move(-1)}><Icon name="arrow" /></button>
+          <button type="button" className="icon-button roll-replay" aria-label={english ? "Replay roll" : "Ulangi roll"} onClick={() => move(0)}><Icon name="replay" /></button>
+          <button type="button" className="icon-button roll-arrow" aria-label={english ? "Next gallery" : "Galeri berikutnya"} onClick={() => move(1)}><Icon name="arrow" /></button>
         </div>
       </div>
     </section>
