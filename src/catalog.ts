@@ -1,3 +1,5 @@
+import { extraToys, type ExtraToyArt } from './extra-catalog';
+
 export type ColorOption = {
   id: string;
   label: string;
@@ -34,7 +36,7 @@ export type Product = {
   promo?: { discount: number; vouchers: number };
   stock?: Readonly<Record<string, number>>;
   media?: readonly MediaAsset[];
-  art: 'rocket' | 'rainbow' | 'city' | 'garden';
+  art: 'rocket' | 'rainbow' | 'city' | 'garden' | ExtraToyArt;
   colors: readonly [ColorOption, ...ColorOption[]];
   sizes: readonly [SizeOption, ...SizeOption[]];
 };
@@ -108,6 +110,7 @@ export const products: readonly [Product, ...Product[]] = [
     colors: [sage, berry, honey],
     sizes: sizes(69000),
   },
+  ...extraToys,
 ];
 
 export const categories: readonly Category[] = ['Susun', 'Kreasi', 'Imajinasi'];
