@@ -69,8 +69,8 @@ function ProductCard({ product, copy, locale, saved, onOpen, onSave }: {
   );
 }
 
-export function Catalogue({ copy, locale, list, category, saved, savedOnly, onCategory, onOpen, onSave, onReset }: {
-  copy: Copy; locale: Locale; list: readonly Product[]; category: Category | ''; saved: string[]; savedOnly: boolean;
+export function Catalogue({ copy, locale, list, category, saved, onCategory, onOpen, onSave, onReset }: {
+  copy: Copy; locale: Locale; list: readonly Product[]; category: Category | ''; saved: string[];
   onCategory: (category: Category | '') => void; onOpen: (product: Product) => void; onSave: (product: Product) => void; onReset: () => void;
 }) {
   const grid = useRef<HTMLDivElement>(null);
@@ -105,7 +105,7 @@ export function Catalogue({ copy, locale, list, category, saved, savedOnly, onCa
   return (
     <section className="wrap catalog" id="koleksi" aria-labelledby="catalog-title">
       <div className="catalog-head">
-        <h1 id="catalog-title">{savedOnly ? copy.saved : copy.collection}</h1>
+        <h1 id="catalog-title">{copy.collection}</h1>
         <span className="product-count" role="status"><RollingNumber value={list.length} /> {copy.products}</span>
       </div>
       <CategoryTabs copy={copy} locale={locale} active={category} onChange={onCategory} />
@@ -114,7 +114,7 @@ export function Catalogue({ copy, locale, list, category, saved, savedOnly, onCa
           onOpen={onOpen} onSave={() => onSave(product)} />)}
       </div>
       {!list.length && (
-        <div className="empty"><p>{savedOnly && !saved.length ? copy.noSaved : copy.noResults}</p>
+        <div className="empty"><p>{copy.noResults}</p>
           <button type="button" className="button button-outline" onClick={onReset}>{copy.showAll}</button>
         </div>
       )}
