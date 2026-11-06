@@ -81,7 +81,7 @@ export function Subtotal({ value, copy }: { value: number; copy: Copy }) {
   return <div className="subtotal"><span>{copy.subtotal}</span><strong><RollingNumber value={value} currency /></strong></div>;
 }
 
-type SurfaceKind = 'menu' | 'cart' | 'detail' | 'checkout';
+type SurfaceKind = 'menu' | 'cart' | 'saved' | 'detail' | 'checkout';
 
 export function Surface({ open, kind, titleId, origin, enter, onClose, children }: {
   open: boolean; kind: SurfaceKind; titleId: string; origin?: Point;
@@ -102,7 +102,8 @@ export function Surface({ open, kind, titleId, origin, enter, onClose, children 
 
     const motion = gsap.context(() => {
       if (enter?.(dialog)) return;
-      if (kind === 'cart' && matchMedia('(min-width: 741px)').matches) {
+      const sheet = kind === 'cart' || kind === 'saved';
+      if (sheet && matchMedia('(min-width: 741px)').matches) {
         const bounds = dialog.getBoundingClientRect();
         const x = Math.min(98, Math.max(2, ((origin?.x ?? bounds.right - 24) - bounds.left) / bounds.width * 100));
         const edge = Math.min(100, x + 3);
@@ -111,10 +112,10 @@ export function Surface({ open, kind, titleId, origin, enter, onClose, children 
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
             duration: .6, ease: 'power3.inOut', clearProps: 'clipPath',
           }, .055)
-          .from('.cart-body', { y: -12, opacity: .15, duration: .45, ease: 'power3.out', clearProps: 'transform,opacity' }, .23);
+          .from('.cart-body, .saved-body', { y: -12, opacity: .15, duration: .45, ease: 'power3.out', clearProps: 'transform,opacity' }, .23);
       } else {
-        const distance = kind === 'cart' ? Math.min(230, dialog.clientHeight * .6) : 15;
-        gsap.from(dialog, { y: distance, duration: kind === 'cart' ? .56 : .38, ease: 'power4.out', clearProps: 'transform' });
+        const distance = sheet ? Math.min(230, dialog.clientHeight * .6) : 15;
+        gsap.from(dialog, { y: distance, duration: sheet ? .56 : .38, ease: 'power4.out', clearProps: 'transform' });
       }
     }, dialog);
 
