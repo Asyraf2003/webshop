@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { categories, type Category } from './catalog';
 import { centerOf, type Point } from './commerce-ui';
-import { CartIcon, Icon } from './icons';
+import { CartIcon, Icon, LanguageFlag } from './icons';
 import { categoryName, type Copy, type Locale } from './locale';
 import { PaperMark, RollingNumber } from './motion';
 
@@ -47,11 +47,11 @@ function Account({ copy }: { copy: Copy }) {
   );
 }
 
-export function SiteHeader({ copy, locale, query, savedOnly, quantity, searchRef, onQuery, onSearchFocus, onHome, onLanguage, onSaved, onCart }: {
-  copy: Copy; locale: Locale; query: string; savedOnly: boolean; quantity: number;
+export function SiteHeader({ copy, locale, query, quantity, searchRef, onQuery, onSearchFocus, onHome, onLanguage, onSaved, onCart }: {
+  copy: Copy; locale: Locale; query: string; quantity: number;
   searchRef: RefObject<HTMLInputElement | null>;
   onQuery: (value: string) => void; onSearchFocus: () => void; onHome: () => void; onLanguage: () => void;
-  onSaved: (show: boolean) => void; onCart: (origin: Point) => void;
+  onSaved: (origin: Point) => void; onCart: (origin: Point) => void;
 }) {
   return (
     <header className="site-header">
@@ -62,10 +62,12 @@ export function SiteHeader({ copy, locale, query, savedOnly, quantity, searchRef
             value={query} onFocus={onSearchFocus} onChange={event => onQuery(event.target.value)} />
         </label>
         <div className="header-actions">
-          <button type="button" className="plain-icon header-control language-trigger" aria-label={copy.switchLanguage} onClick={onLanguage}>
-            <Icon name="language" /><span>{locale.toUpperCase()}</span>
+          <button type="button" className="plain-icon header-control" aria-label={copy.switchLanguage}
+            title={copy.switchLanguage} onClick={onLanguage}>
+            <LanguageFlag locale={locale} />
           </button>
-          <button type="button" className="plain-icon header-control bookmark" aria-label={copy.saved} aria-pressed={savedOnly} onClick={() => onSaved(!savedOnly)}><Icon name="bookmark" /></button>
+          <button type="button" className="plain-icon header-control bookmark" aria-label={copy.saved} aria-haspopup="dialog"
+            onClick={event => onSaved(centerOf(event.currentTarget))}><Icon name="bookmark" /></button>
           <button type="button" className="plain-icon header-control cart-trigger" aria-label={copy.cart + ', ' + quantity + ' ' + copy.item} aria-haspopup="dialog"
             onClick={event => onCart(centerOf(event.currentTarget))}>
             <CartIcon /><span className="cart-badge" aria-hidden="true"><RollingNumber value={quantity} /></span>
@@ -77,9 +79,9 @@ export function SiteHeader({ copy, locale, query, savedOnly, quantity, searchRef
   );
 }
 
-export function SiteFooter({ copy, locale = 'id', onHome, onCategory, onSaved, onCart }: {
+export function SiteFooter({ copy, locale = 'en', onHome, onCategory, onSaved, onCart }: {
   copy: Copy; locale?: Locale; onHome: () => void;
-  onCategory?: (category: Category) => void; onSaved?: () => void; onCart?: (origin: Point) => void;
+  onCategory?: (category: Category) => void; onSaved?: (origin: Point) => void; onCart?: (origin: Point) => void;
 }) {
   return (
     <footer className="site-footer">
@@ -99,7 +101,7 @@ export function SiteFooter({ copy, locale = 'id', onHome, onCategory, onSaved, o
           <nav className="footer-nav" aria-label={copy.shopping}>
             <h3>{copy.shopping}</h3>
             <a href="#promo">{copy.promotion}</a>
-            {onSaved && <button type="button" onClick={onSaved}>{copy.saved}</button>}
+            {onSaved && <button type="button" aria-haspopup="dialog" onClick={event => onSaved(centerOf(event.currentTarget))}>{copy.saved}</button>}
             {onCart && <button type="button" onClick={event => onCart(centerOf(event.currentTarget))}>{copy.cart}</button>}
           </nav>
         </div>
