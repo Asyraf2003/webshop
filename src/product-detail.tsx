@@ -20,8 +20,6 @@ function MediaThumbnail({ product, color, asset, crop }: {
 function ProductMedia({ product, color, size, active, onMedia, copy, locale }: {
   product: Product; color: ColorOption; size: SizeOption; active: number; onMedia: (index: number) => void; copy: Copy; locale: Locale;
 }) {
-  const [shareState, setShareState] = useState<'idle' | 'copied' | 'shared' | 'link'>('idle');
-  const url = productLink(product.id);
   const assets = product.media ?? [];
   const selected = assets[active - 2];
   const labels = [copy.front, copy.closeUp, ...assets.map(asset => locale === 'en' ? asset.labelEn : asset.label)];
@@ -44,13 +42,6 @@ function ProductMedia({ product, color, size, active, onMedia, copy, locale }: {
           </button>
         ))}
       </div>
-      <div className="share-row">
-        <button type="button" className="text-button" onClick={async () => setShareState(await shareProduct(product.name, url))}>
-          <Icon name={shareState === 'copied' ? 'check' : 'share'} />{shareState === 'copied' ? copy.copied : copy.share}
-        </button>
-        {shareState === 'copied' && <span className="sr-only" role="status">{copy.copied}</span>}
-        {shareState === 'link' && <input type="url" className="share-link" aria-label={copy.shareLink} readOnly value={url} onFocus={event => event.currentTarget.select()} />}
-      </div>
     </div>
   );
 }
@@ -59,6 +50,8 @@ export function ProductDetail({ product, open, copy, locale, cart, imageOrigin, 
   product: Product; open: boolean; copy: Copy; locale: Locale; cart: CartLine[]; imageOrigin?: DOMRect;
   onClose: () => void; onCart: (origin: Point) => void; onAdd: (variant: Variant, count: number, checkout: boolean) => boolean;
 }) {
+  const [shareState, setShareState] = useState<'idle' | 'copied' | 'shared' | 'link'>('idle');
+  const url = productLink(product.id);
   const [color, setColor] = useState(product.colors[0]);
   const [size, setSize] = useState(product.sizes[0]);
   const [count, setCount] = useState(1);
@@ -159,13 +152,20 @@ export function ProductDetail({ product, open, copy, locale, cart, imageOrigin, 
             </div>
           </div>
           <div className="detail-purchase">
-            <button type="button" className="button button-outline" disabled={!available} onClick={() => add(false)}>
-              {feedback === 'added' ? <Icon name="check" /> : <CartIcon />}{feedback === 'added' ? copy.added : copy.add}
+            <button type="button" className="button button-outline detail-share" aria-label={copy.share}
+              onClick={async () => setShareState(await shareProduct(product.name, url))}>
+              <Icon name="share" /><span>{copy.share}</span>
             </button>
-            <button type="button" className="button button-solid" disabled={!available} onClick={() => add(true)}>
+            <button type="button" className="button button-outline detail-add" disabled={!available} onClick={() => add(false)}>
+              <CartIcon />{feedback === 'added' ? copy.added : copy.add}
+            </button>
+            <button type="button" className="button button-solid detail-checkout" disabled={!available} onClick={() => add(true)}>
               <Icon name="shopify" />{copy.checkout}
             </button>
           </div>
+          {shareState === 'copied' && <p className="share-status" role="status"><Icon name="check" />{copy.copied}</p>}
+          {shareState === 'link' && <input type="url" className="share-link" aria-label={copy.shareLink} readOnly value={url}
+            onFocus={event => event.currentTarget.select()} />}
           {feedback === 'added' && <button type="button" className="text-button view-cart" onClick={event => onCart(centerOf(event.currentTarget))}>
             {copy.viewCart}<Icon name="arrow" />
           </button>}
