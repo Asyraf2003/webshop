@@ -11,14 +11,11 @@ import { ProductArt } from './product-art';
 export function PageBackdrop() {
   return (
     <div className="page-backdrop" aria-hidden="true">
-      <svg className="paper-orbits" viewBox="0 0 840 640" fill="none" preserveAspectRatio="xMidYMid slice">
-        <ellipse cx="521" cy="302" rx="281" ry="179" transform="rotate(-26 521 302)" />
-        <ellipse cx="521" cy="302" rx="301" ry="198" transform="rotate(-26 521 302)" />
-        <ellipse cx="521" cy="302" rx="321" ry="217" transform="rotate(-26 521 302)" />
-        <ellipse cx="521" cy="302" rx="341" ry="236" transform="rotate(-26 521 302)" />
-        <path d="M171 102h24m-12-12v24m543 351h24m-12-12v24M387 495h16m-8-8v16" />
-      </svg>
-      <div className="paper-rules" />
+      <div className="aurora">
+        <span className="aurora-band aurora-cool" />
+        <span className="aurora-band aurora-warm" />
+        <span className="aurora-band aurora-blue" />
+      </div>
     </div>
   );
 }
