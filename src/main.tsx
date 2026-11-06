@@ -8,6 +8,7 @@ import { PageBackdrop, PromoHero } from './home-stage';
 import { categoryName, copyFor, descriptionFor, readLocale } from './locale';
 import { pressFeedback } from './motion';
 import { ProductDetail } from './product-detail';
+import { SavedPanel } from './saved-panel';
 import { summarizeCart, type Variant } from './shop';
 import { linkedProduct, readSaved, setLinkedProduct, useCart, useStored } from './store-state';
 import { SiteFooter, SiteHeader } from './site-chrome';
@@ -15,17 +16,16 @@ import { Catalogue } from './storefront';
 import './paperplay.css';
 import './home.css';
 
-type Panel = 'detail' | 'cart' | 'checkout' | null;
-type Selection = { product: Product; visit: number; imageOrigin?: DOMRect };
+type Panel = 'detail' | 'cart' | 'saved' | 'checkout' | null;
+type Selection = { product: Product; visit: number; imageOrigin?: DOMRect; fromSaved?: boolean };
 
 function scrollToCatalogue() {
   document.getElementById('koleksi')?.scrollIntoView({ block: 'start' });
 }
 
 function App() {
-  const [locale, setLocale] = useStored('paperplay-webshop-locale-v1', readLocale);
+  const [locale, setLocale] = useStored('paperplay-webshop-locale-v2', readLocale);
   const [saved, setSaved] = useStored('paperplay-webshop-saved-v1', readSaved);
-  const [savedOnly, setSavedOnly] = useState(false);
   const [category, setCategory] = useState<Category | ''>('');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Selection | undefined>(() => {
@@ -40,14 +40,17 @@ function App() {
   const cart = useCart();
   const summary = summarizeCart(cart.lines);
   const copy = copyFor(locale);
+  const savedProducts = products.filter(product => saved.includes(product.id));
 
   const term = query.trim().toLocaleLowerCase(locale);
   const matches = products.filter(product => (!category || product.category === category) &&
-    (!savedOnly || saved.includes(product.id)) &&
     [product.name, product.category, categoryName(product.category, locale), descriptionFor(product, locale)]
       .join(' ').toLocaleLowerCase(locale).includes(term));
 
-  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.title = 'Paperplay — ' + copy.collection;
+  }, [locale, copy.collection]);
   useEffect(() => {
     function syncLink() {
       const product = linkedProduct();
@@ -61,26 +64,22 @@ function App() {
   function resetCatalogue() {
     setCategory('');
     setQuery('');
-    setSavedOnly(false);
   }
 
-  function toggleSaved(show: boolean) {
-    setCategory('');
-    setQuery('');
-    setSavedOnly(show);
-    setPanel(null);
-    requestAnimationFrame(scrollToCatalogue);
+  function openSaved(point: Point) {
+    setOrigin(point);
+    setPanel('saved');
   }
 
-  function openProduct(product: Product, imageOrigin?: DOMRect) {
-    setSelected(previous => ({ product, imageOrigin, visit: (previous?.visit ?? 0) + 1 }));
+  function openProduct(product: Product, imageOrigin?: DOMRect, fromSaved = false) {
+    setSelected(previous => ({ product, imageOrigin, fromSaved, visit: (previous?.visit ?? 0) + 1 }));
     setLinkedProduct(product.id);
     setPanel('detail');
   }
 
   function closePanel() {
     if (panel === 'detail') setLinkedProduct();
-    setPanel(null);
+    setPanel(panel === 'detail' && selected?.fromSaved ? 'saved' : null);
   }
 
   function openCart(point: Point) {
@@ -114,20 +113,23 @@ function App() {
     <div className="paperplay-app" onClickCapture={pressFeedback}>
       <PageBackdrop />
       <a className="skip-link" href="#main">{copy.skip}</a>
-      <SiteHeader copy={copy} locale={locale} query={query} savedOnly={savedOnly} quantity={summary.quantity} searchRef={search}
+      <SiteHeader copy={copy} locale={locale} query={query} quantity={summary.quantity} searchRef={search}
         onQuery={value => { if (!query && value) scrollToCatalogue(); setQuery(value); }}
         onSearchFocus={() => { if (window.scrollY > (document.getElementById('koleksi')?.offsetTop ?? 0)) scrollToCatalogue(); }}
         onHome={resetCatalogue} onLanguage={() => setLocale(current => current === 'id' ? 'en' : 'id')}
-        onSaved={toggleSaved} onCart={openCart} />
+        onSaved={openSaved} onCart={openCart} />
       <main id="main" tabIndex={-1}>
         <PromoHero copy={copy} onOpen={openProduct} suspended={panel !== null} />
-        <Catalogue copy={copy} locale={locale} list={matches} category={category} saved={saved} savedOnly={savedOnly}
+        <Catalogue copy={copy} locale={locale} list={matches} category={category} saved={saved}
           onCategory={setCategory} onOpen={openProduct} onReset={resetCatalogue}
           onSave={product => setSaved(current => current.includes(product.id) ? current.filter(id => id !== product.id) : [...current, product.id])} />
       </main>
       <SiteFooter copy={copy} locale={locale} onHome={resetCatalogue} onCategory={browseCategory}
-        onSaved={() => toggleSaved(true)} onCart={openCart} />
+        onSaved={openSaved} onCart={openCart} />
       <span className="sr-only" role="status">{announcement}</span>
+      <SavedPanel open={panel === 'saved'} origin={origin} copy={copy} locale={locale} items={savedProducts} onClose={closePanel}
+        onOpen={(product, image) => openProduct(product, image, true)}
+        onRemove={product => setSaved(current => current.filter(id => id !== product.id))} />
       {selected && <ProductDetail key={selected.visit} product={selected.product} imageOrigin={selected.imageOrigin}
         open={panel === 'detail'} copy={copy} locale={locale}
         cart={cart.lines} onClose={closePanel} onCart={openCart} onAdd={addToCart} />}
