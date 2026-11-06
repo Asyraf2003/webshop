@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
+import { categories, type Category } from './catalog';
 import { centerOf, type Point } from './commerce-ui';
 import { CartIcon, Icon } from './icons';
-import type { Copy, Locale } from './locale';
+import { categoryName, type Copy, type Locale } from './locale';
 import { PaperMark, RollingNumber } from './motion';
 
 function Wordmark({ onClick }: { onClick: () => void }) {
   return <a className="wordmark" href="#main" aria-label="Paperplay" onClick={onClick}><PaperMark /><span>paperplay<span>.</span></span></a>;
 }
 
-function Menu({ copy, onBrowse, onSaved }: { copy: Copy; onBrowse: () => void; onSaved: () => void }) {
+function Account({ copy }: { copy: Copy }) {
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -31,22 +32,17 @@ function Menu({ copy, onBrowse, onSaved }: { copy: Copy; onBrowse: () => void; o
     };
   }, [open]);
 
-  function browse() { setOpen(false); onBrowse(); }
-  function saved() { setOpen(false); trigger.current?.focus(); onSaved(); }
-
   return (
-    <div ref={anchor} className="menu-anchor" onBlur={event => {
+    <div ref={anchor} className="account-anchor" onBlur={event => {
       if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
     }}>
-      <button type="button" ref={trigger} className="menu-pill" aria-expanded={open} aria-controls="site-menu"
-        aria-label={open ? copy.close + ' ' + copy.menu : copy.openMenu} onClick={() => setOpen(current => !current)}>
-        <span>{open ? copy.close : copy.menu}</span><Icon name={open ? 'close' : 'menu'} />
+      <button type="button" ref={trigger} className="plain-icon header-control account-trigger" aria-expanded={open}
+        aria-controls="account-popover" aria-label={copy.account} onClick={() => setOpen(current => !current)}>
+        <Icon name="account" />
       </button>
-      <nav id="site-menu" className="menu-popover" data-open={open} aria-label={copy.menu} inert={!open}>
-        <a href="#main" onClick={browse}><span>{copy.home}</span><Icon name="arrow" /></a>
-        <a href="#koleksi" onClick={browse}><span>{copy.collection}</span><Icon name="arrow" /></a>
-        <button type="button" onClick={saved}><span>{copy.saved}</span><Icon name="arrow" /></button>
-      </nav>
+      <div id="account-popover" className="account-popover" data-open={open} aria-hidden={!open}>
+        <span>{copy.login}</span>
+      </div>
     </div>
   );
 }
@@ -66,21 +62,51 @@ export function SiteHeader({ copy, locale, query, savedOnly, quantity, searchRef
             value={query} onFocus={onSearchFocus} onChange={event => onQuery(event.target.value)} />
         </label>
         <div className="header-actions">
-          <button type="button" className="plain-icon language-trigger" aria-label={copy.switchLanguage} onClick={onLanguage}>
+          <button type="button" className="plain-icon header-control language-trigger" aria-label={copy.switchLanguage} onClick={onLanguage}>
             <Icon name="language" /><span>{locale.toUpperCase()}</span>
           </button>
-          <button type="button" className="plain-icon bookmark" aria-label={copy.saved} aria-pressed={savedOnly} onClick={() => onSaved(!savedOnly)}><Icon name="bookmark" /></button>
-          <button type="button" className="plain-icon cart-trigger" aria-label={copy.cart + ', ' + quantity + ' ' + copy.item} aria-haspopup="dialog"
+          <button type="button" className="plain-icon header-control bookmark" aria-label={copy.saved} aria-pressed={savedOnly} onClick={() => onSaved(!savedOnly)}><Icon name="bookmark" /></button>
+          <button type="button" className="plain-icon header-control cart-trigger" aria-label={copy.cart + ', ' + quantity + ' ' + copy.item} aria-haspopup="dialog"
             onClick={event => onCart(centerOf(event.currentTarget))}>
             <CartIcon /><span className="cart-badge" aria-hidden="true"><RollingNumber value={quantity} /></span>
           </button>
-          <Menu copy={copy} onBrowse={onHome} onSaved={() => onSaved(true)} />
+          <Account copy={copy} />
         </div>
       </div>
     </header>
   );
 }
 
-export function SiteFooter({ copy, onHome }: { copy: Copy; onHome: () => void }) {
-  return <footer className="site-footer"><div className="wrap footer-inner"><Wordmark onClick={onHome} /><p>{copy.footer}</p><a href="#main">{copy.back} ↑</a></div></footer>;
+export function SiteFooter({ copy, locale = 'id', onHome, onCategory, onSaved, onCart }: {
+  copy: Copy; locale?: Locale; onHome: () => void;
+  onCategory?: (category: Category) => void; onSaved?: () => void; onCart?: (origin: Point) => void;
+}) {
+  return (
+    <footer className="site-footer">
+      <div className="footer-print" aria-hidden="true"><PaperMark variant={1} /></div>
+      <div className="wrap">
+        <div className="footer-inner">
+          <div className="footer-brand">
+            <Wordmark onClick={onHome} />
+            <h2>{copy.footerHeadline}</h2>
+            <p>{copy.footer}</p>
+          </div>
+          <nav className="footer-nav" aria-label={copy.explore}>
+            <h3>{copy.explore}</h3>
+            <a href="#koleksi" onClick={onHome}>{copy.collection}</a>
+            {categories.map(category => <a href="#koleksi" key={category} onClick={() => onCategory?.(category)}>{categoryName(category, locale)}</a>)}
+          </nav>
+          <nav className="footer-nav" aria-label={copy.shopping}>
+            <h3>{copy.shopping}</h3>
+            <a href="#promo">{copy.promotion}</a>
+            {onSaved && <button type="button" onClick={onSaved}>{copy.saved}</button>}
+            {onCart && <button type="button" onClick={event => onCart(centerOf(event.currentTarget))}>{copy.cart}</button>}
+          </nav>
+        </div>
+        <div className="footer-bottom"><span>© {new Date().getFullYear()} Paperplay</span>
+          <a href="#main">{copy.back}<Icon name="arrow" /></a>
+        </div>
+      </div>
+    </footer>
+  );
 }
