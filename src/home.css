@@ -1,26 +1,40 @@
 .paperplay-app { position: relative; isolation: isolate; }
 .page-backdrop {
   position: absolute; z-index: -1; inset: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(#f8faf4, #f6f7f0 53rem, #f8f8f3);
+}
+.aurora {
+  position: absolute; inset: 0 0 auto; height: clamp(40rem, 52vw, 55rem); overflow: hidden;
+  mask-image: linear-gradient(#000, #000 32%, #000b 60%, transparent 100%);
+}
+.aurora-band {
+  position: absolute; inset: -26% -16% 0; pointer-events: none;
+  filter: blur(clamp(24px, 3vw, 54px));
+}
+.aurora-cool {
   background:
-    radial-gradient(circle at 1px 1px, #6e543219 .55px, transparent .85px) 0 0 / 5px 5px,
-    radial-gradient(circle at 1px 1px, #ffffff9c .55px, transparent .85px) 1px 3px / 7px 7px,
-    radial-gradient(ellipse 900px 505px at 89% 210px, #efd38d9e, transparent 79%),
-    radial-gradient(ellipse 530px 500px at 0 655px, #cedbc49c, transparent 74%),
-    linear-gradient(#f8efd9, #f9f6eb 550px, #f3f0e6 1170px, #f9f7ee);
+    radial-gradient(ellipse 58% 37% at 25% 39%, #70d9adab, transparent 77%),
+    radial-gradient(ellipse 47% 32% at 65% 45%, #97dfd89f, transparent 79%);
+  transform: translate3d(-5%, -2%, 0) rotate(-14deg);
+  animation: aurora-cool 19s ease-in-out infinite alternate;
 }
-.paper-orbits {
-  position: absolute; top: 27px; right: clamp(-175px, -5vw, -24px);
-  width: clamp(635px, 73vw, 1080px); height: auto; color: #7656233b; stroke: currentColor;
-  stroke-width: 1; opacity: .85;
+.aurora-warm {
+  background:
+    radial-gradient(ellipse 43% 32% at 51% 61%, #f4cf9a9c, transparent 76%),
+    radial-gradient(ellipse 29% 31% at 73% 56%, #edb8ce96, transparent 77%);
+  transform: translate3d(2%, 4%, 0) rotate(-10deg);
+  animation: aurora-warm 26s ease-in-out infinite alternate;
 }
-.paper-rules {
-  position: absolute; inset: 0 max(16px, calc((100% - var(--max)) / 2 - 13px));
-  border-inline: 1px solid #7c715326;
+.aurora-blue {
+  background:
+    radial-gradient(ellipse 52% 30% at 76% 33%, #92aaf1b8, transparent 77%),
+    radial-gradient(ellipse 45% 28% at 70% 46%, #b49be08e, transparent 75%);
+  transform: translate3d(2%, 0, 0) rotate(12deg);
+  animation: aurora-blue 22s ease-in-out infinite alternate;
 }
-.paper-rules::before {
-  position: absolute; inset: 78px 0 auto; height: 5px; content: '';
-  background: repeating-linear-gradient(90deg, #7d684843 0 1px, transparent 1px 12px);
-}
+@keyframes aurora-cool { to { transform: translate3d(9%, 9%, 0) rotate(4deg) scale(1.14); } }
+@keyframes aurora-warm { to { transform: translate3d(-9%, -4%, 0) rotate(9deg) scale(1.12); } }
+@keyframes aurora-blue { to { transform: translate3d(-9%, 8%, 0) rotate(-12deg) scale(1.13); } }
 
 .site-header { background: #fffdf8f5; }
 .header-actions { gap: 3px; }
@@ -33,10 +47,7 @@
 }
 .header-control:hover > .icon, .header-control[aria-expanded="true"] > .icon { transform: translateY(-1px); }
 .header-control .cart-badge { right: 2px; top: 1px; }
-.header-control.language-trigger span {
-  position: absolute; bottom: 2px; right: 2px; padding: 1px 2px; border-radius: 3px;
-  color: var(--green); background: #fffdf8; font: 720 .56rem/1 var(--mono);
-}
+.flag-icon { display: block; overflow: hidden; border-radius: 50%; outline: 1px solid #25332928; outline-offset: -1px; }
 .account-anchor { position: relative; flex: none; }
 .account-popover {
   position: absolute; z-index: 1; top: calc(100% + 8px); right: 0; min-width: 116px;
@@ -155,8 +166,7 @@
 .footer-bottom .icon { width: 15px; height: 15px; transform: rotate(-90deg); }
 
 @media (max-width: 740px) {
-  .paper-orbits { top: 15px; right: -145px; width: clamp(520px, 109vw, 815px); }
-  .paper-rules { inset-inline: 5px; }
+  .aurora { height: 39rem; }
   .header-actions { gap: 1px; }
   .header-actions .header-control { width: 41px; min-width: 41px; height: 43px; min-height: 43px; }
   .hero-stage {
@@ -186,4 +196,8 @@
 @media (max-width: 360px) {
   .header-inner .wordmark { font-size: 1.21rem; }
   .header-actions .header-control { width: 38px; min-width: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-band { animation: none; }
 }
